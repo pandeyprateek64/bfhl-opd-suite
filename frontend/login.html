@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BFHL OPD Suite — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#003087;--blue:#0057b8;--accent:#c8001e;--light:#f4f6fb;--border:#dde3ef;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--light);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .login-wrap{width:100%;max-width:420px;padding:24px;}
+  .brand{text-align:center;margin-bottom:32px;}
+  .brand-logo{width:52px;height:52px;background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;}
+  .brand-logo svg{width:28px;height:28px;fill:#fff;}
+  .brand h1{font-family:'EB Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--navy);line-height:1.2;}
+  .brand p{font-size:.82rem;color:#64748b;margin-top:4px;}
+  .card{background:#fff;border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,48,135,.1);}
+  .card h2{font-family:'EB Garamond',serif;font-size:1.2rem;font-weight:600;color:var(--navy);margin-bottom:4px;}
+  .card p.sub{font-size:.8rem;color:#64748b;margin-bottom:24px;}
+  .fg{margin-bottom:18px;}
+  label{display:block;font-size:.78rem;font-weight:600;color:#374151;margin-bottom:6px;letter-spacing:.02em;}
+  input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:#1e293b;background:#fff;transition:border-color .16s;}
+  input:focus{outline:none;border-color:var(--blue);}
+  .btn-login{width:100%;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;padding:13px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;letter-spacing:.02em;margin-top:8px;transition:opacity .16s;}
+  .btn-login:hover{opacity:.9;}
+  .btn-login:disabled{opacity:.6;cursor:not-allowed;}
+  .error-msg{background:#fff0f0;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:.8rem;color:#dc2626;margin-bottom:16px;display:none;}
+  .error-msg.show{display:block;}
+  .footer-note{text-align:center;font-size:.73rem;color:#94a3b8;margin-top:20px;}
+  .divider{height:1px;background:var(--border);margin:20px 0;}
+  .role-badge{display:inline-block;background:#f0f4ff;color:var(--blue);font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:20px;border:1px solid #c7d7f5;}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h1>BFHL OPD Suite</h1>
+    <p>Bajaj Finserv Health — Internal Pricing Platform</p>
+  </div>
+  <div class="card">
+    <h2>Sign in to your account</h2>
+    <p class="sub">Use your BFHL credentials to access the pricing tools.</p>
+    <div class="error-msg" id="err-msg">Invalid email or password. Please try again.</div>
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="fg">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="you@bfhl.co.in" required autocomplete="email">
+      </div>
+      <div class="fg">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+      </div>
+      <button class="btn-login" type="submit" id="btn-login">Sign In →</button>
+    </form>
+    <div class="divider"></div>
+    <div style="font-size:.75rem;color:#64748b;">
+      Access is restricted to authorised BFHL personnel only.
+      Contact your administrator to request access or reset your password.
+    </div>
+  </div>
+  <div class="footer-note">
+    © 2026 Bajaj Finserv Health Ltd. · Internal Use Only
+  </div>
+</div>
+<script>
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('err-msg');
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      err.textContent = data.error || 'Invalid credentials';
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Sign In →';
+      return;
+    }
+    localStorage.setItem('bfhl_token', data.token);
+    localStorage.setItem('bfhl_user', JSON.stringify(data.user));
+    window.location.href = '/dashboard.html';
+  } catch (ex) {
+    err.textContent = 'Connection error. Please try again.';
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Sign In →';
+  }
+}
+// Redirect if already logged in
+if (localStorage.getItem('bfhl_token')) {
+  window.location.href = '/dashboard.html';
+}
+</script>
+</body>
+</html>
