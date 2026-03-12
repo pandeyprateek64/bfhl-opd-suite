@@ -5,7 +5,7 @@
   "main": "backend/index.ts",
   "scripts": {
     "start": "tsx backend/index.ts",
-    "start:prod": "node dist/index.js",
+    "start:prod": "npm run build:clean && node dist/index.js",
     "dev": "tsx watch backend/index.ts",
     "build": "tsc",
     "build:clean": "rm -rf dist && npm run build",
