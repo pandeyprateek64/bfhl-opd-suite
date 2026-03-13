@@ -2,20 +2,39 @@
   "name": "bfhl-opd-suite",
   "version": "1.0.0",
   "description": "BFHL OPD Pricing Suite — Internal platform for Bajaj Finserv Health",
-  "main": "backend/server.js",
+  "main": "backend/index.ts",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "node backend/server.js"
+    "start": "tsx backend/index.ts",
+    "start:prod": "npm run build:clean && node dist/index.js",
+    "dev": "tsx watch backend/index.ts",
+    "build": "tsc",
+    "build:clean": "rm -rf dist && npm run build",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "pg": "^8.11.3",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.18.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.45.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.20.0",
+    "serverless-http": "^4.0.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.9",
+    "tsx": "^4.21.0"
   }
 }
