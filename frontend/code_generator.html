@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Bajaj Health — OPD Quote Code Generator</title>
+<script>
+// ── Auth Guard ──
+const BFHL_TOKEN = localStorage.getItem('bfhl_token');
+if (!BFHL_TOKEN) window.location.href = '/login.html';
+</script>
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1179,6 +1184,31 @@ function App() {
     setTimeout(() => {
       quoteRef.current?.scrollIntoView({ behavior:'smooth' });
     }, 100);
+    // ── Save quote to backend ──
+    const quoteRefId = S.client.cid
+      ? 'QCG-' + S.client.cid.replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,8) + '-' + new Date().getFullYear()
+      : 'QCG-' + Date.now().toString(36).toUpperCase().slice(-6);
+    fetch('/api/saveQuote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('bfhl_token') },
+      body: JSON.stringify({
+        quote_ref: quoteRefId,
+        tool_source: 'CODE_GENERATOR',
+        client_name: S.client.co,
+        client_id: S.client.cid,
+        employee_count: parseInt(S.client.emp) || null,
+        family_construct: S.client.families.join(','),
+        coverage_type: S.client.partType === 'Compulsory' ? 'COMPULSORY' : 'VOLUNTARY',
+        product_type: S.product.type,
+        wallet_si: parseInt(S.product.walletSI) || null,
+        plan_tier: S.product.plan,
+        wellness_mode: S.product.hasWellness ? 'with' : 'without',
+        benefit_count: S.benefits.length,
+        rates_json: S.rates,
+        quote_date: S.client.date,
+        status: 'DRAFT'
+      })
+    }).catch(e => console.warn('Quote save failed:', e));
   }
 
   function dlPDF() {
@@ -1234,6 +1264,7 @@ function App() {
           <div className="phdr-ttl">OPD Quote Code Generator<small>Bajaj Finserv Health — Structured Quotation Builder</small></div>
         </div>
         <span className="hbadge">WCP Format · Works Offline</span>
+        <a href="/dashboard.html" style={{color:'rgba(255,255,255,.85)',fontSize:'.78rem',fontFamily:"'DM Sans',sans-serif",textDecoration:'none',background:'rgba(255,255,255,.12)',padding:'6px 14px',borderRadius:'7px',border:'1px solid rgba(255,255,255,.2)'}}>← Dashboard</a>
       </div>
 
       <div className="wrap">
