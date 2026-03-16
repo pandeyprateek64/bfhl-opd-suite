@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bajaj Health — Quote Tracker & Case Allocation</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --navy:#003087; --blue:#0057b8; --blue-mid:#1565c0;
+  --light-blue:#e8f0fb; --accent:#c8001e;
+  --dark:#1a1a2e; --mid:#4a5568; --muted:#718096;
+  --light:#f4f7fc; --white:#fff; --border:#d1dce8;
+  --border-light:#e8edf5; --success:#047857; --error:#dc2626;
+  --row-even:#f8fafd; --warn:#d97706; --info:#0284c7;
+  --radius:10px; --radius-lg:14px;
+  --shadow:0 2px 24px rgba(0,48,135,.07);
+  --font:'DM Sans',sans-serif; --serif:'EB Garamond',serif; --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--light);color:var(--dark);min-height:100vh;display:flex;flex-direction:column;font-size:14px}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#c1c8d8;border-radius:10px}
+
+/* ── HEADER (matches WCP Portal) ── */
+.phdr{background:linear-gradient(135deg,var(--navy) 0%,var(--blue-mid) 100%);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:62px;box-shadow:0 2px 20px rgba(0,48,135,.35);position:sticky;top:0;z-index:200}
+.phdr-l{display:flex;align-items:center;gap:14px}
+.logo-pill{background:#fff;border-radius:7px;padding:4px 9px;display:flex;align-items:center}
+.logo-pill span{font-family:var(--serif);font-weight:700;font-size:.82rem;color:var(--navy);letter-spacing:.02em}
+.phdr-ttl{color:#fff;font-size:.95rem;font-weight:700;font-family:var(--serif);border-left:1px solid rgba(255,255,255,.28);padding-left:14px;line-height:1.35}
+.phdr-ttl small{display:block;font-size:.65rem;font-family:var(--font);font-weight:400;opacity:.65}
+.phdr-r{display:flex;align-items:center;gap:12px}
+.hbadge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.9);padding:4px 12px;border-radius:20px;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase}
+.user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border-radius:8px;padding:5px 12px 5px 6px}
+.user-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#fff3,#fff1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.65rem;font-weight:700;border:1.5px solid rgba(255,255,255,.3)}
+.user-pill .uname{color:#fff;font-size:.75rem;font-weight:600}
+.user-pill .urole{color:rgba(255,255,255,.6);font-size:.6rem}
+
+/* ── LAYOUT ── */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:230px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-section{padding:14px 12px 8px}
+.sb-title{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:0 10px 8px}
+.sb-btn{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border-radius:8px;border:none;cursor:pointer;font-size:.78rem;font-weight:500;background:transparent;color:var(--mid);font-family:var(--font);text-align:left;transition:.15s;margin-bottom:2px;position:relative}
+.sb-btn:hover{background:var(--light-blue);color:var(--blue)}
+.sb-btn.active{background:linear-gradient(135deg,var(--navy),var(--blue-mid));color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(0,48,135,.2)}
+.sb-btn svg{flex-shrink:0;width:16px;height:16px}
+.sb-count{margin-left:auto;background:var(--light);border-radius:10px;padding:1px 8px;font-size:.68rem;font-weight:700;color:var(--muted);font-family:var(--mono)}
+.sb-btn.active .sb-count{background:rgba(255,255,255,.2);color:#fff}
+.sb-divider{border:none;border-top:1px solid var(--border-light);margin:8px 12px}
+.sb-role{width:calc(100% - 24px);margin:4px 12px;padding:7px 10px;background:var(--light);border:1px solid var(--border);border-radius:7px;font-size:.72rem;font-family:var(--font);color:var(--dark);cursor:pointer}
+
+/* ── MAIN ── */
+.main-area{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* Toolbar */
+.toolbar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar h1{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--navy);flex:1;min-width:160px}
+.toolbar h1 small{display:block;font-family:var(--font);font-size:.7rem;font-weight:400;color:var(--muted);margin-top:1px}
+.search-box{position:relative;width:250px}
+.search-box input{width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--border);border-radius:8px;font-size:.8rem;font-family:var(--font);background:var(--light);outline:none;color:var(--dark);transition:.15s}
+.search-box input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,87,184,.1)}
+.search-box svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.tbtn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;font-size:.78rem;font-weight:600;font-family:var(--font);cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:.15s;white-space:nowrap}
+.tbtn:hover{border-color:var(--blue);color:var(--blue);background:var(--light-blue)}
+.tbtn.active{border-color:var(--navy);background:var(--light-blue);color:var(--navy)}
+.tbtn-primary{background:linear-gradient(135deg,var(--navy),var(--blue-mid));color:#fff;border:none;box-shadow:0 2px 8px rgba(0,48,135,.25)}
+.tbtn-primary:hover{box-shadow:0 4px 14px rgba(0,48,135,.35);transform:translateY(-1px)}
+.filter-badge{background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px;font-size:.65rem;font-weight:700}
+
+/* Filter Bar */
+.filter-bar{background:var(--white);border-bottom:1px solid var(--border);padding:8px 24px;display:none;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-bar.show{display:flex}
+.fd{position:relative}
+.fd-btn{display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);font-size:.72rem;font-weight:500;cursor:pointer;color:var(--mid);font-family:var(--font);transition:.15s}
+.fd-btn.sel{border-color:var(--navy);background:var(--light-blue);color:var(--navy)}
+.fd-menu{display:none;position:absolute;top:100%;left:0;margin-top:3px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.1);padding:5px;z-index:100;min-width:175px}
+.fd-menu.open{display:block}
+.fd-menu label{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:5px;cursor:pointer;font-size:.78rem;transition:.1s}
+.fd-menu label:hover{background:var(--light)}
+.fd-menu input[type=checkbox]{accent-color:var(--navy)}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow:auto;padding:20px 24px}
+.content.board-mode{padding:16px 12px}
+
+/* ── BOARD ── */
+.board{display:flex;gap:12px;overflow-x:auto;min-height:calc(100vh - 200px);padding-bottom:20px}
+.bcol{min-width:265px;max-width:290px;flex:0 0 275px;background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.bcol-hd{padding:13px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:2.5px solid var(--border)}
+.bcol-hd .st-lbl{display:flex;align-items:center;gap:7px;font-weight:700;font-size:.78rem}
+.bcol-hd .st-cnt{border-radius:10px;padding:2px 9px;font-size:.72rem;font-weight:700;font-family:var(--mono)}
+.bcol-body{padding:8px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+.bcol-empty{text-align:center;padding:32px 14px;color:var(--muted);font-size:.8rem}
+
+/* Quote Card */
+.qcard{background:var(--white);border:1px solid var(--border-light);border-radius:var(--radius);padding:13px;cursor:pointer;transition:.2s;border-left:3px solid var(--border)}
+.qcard:hover{box-shadow:0 4px 14px rgba(0,48,135,.08);transform:translateY(-1px)}
+.qcard.overdue{box-shadow:inset 0 0 0 1px rgba(220,38,38,.15)}
+.qcard .c-top{display:flex;justify-content:space-between;align-items:start;margin-bottom:7px}
+.qcard .c-id{font-family:var(--mono);font-size:.68rem;color:var(--muted);font-weight:500}
+.obadge{background:#fef2f2;color:var(--error);padding:2px 6px;border-radius:4px;font-size:.6rem;font-weight:700;letter-spacing:.03em}
+.qcard .c-client{font-weight:600;font-size:.85rem;margin-bottom:7px;line-height:1.35}
+.c-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
+.tag{padding:2px 8px;border-radius:5px;font-size:.68rem;font-weight:500}
+.tag-prod{background:var(--light-blue);color:var(--navy)}
+.tag-lives{background:#e0f2fe;color:var(--info)}
+.c-premium{font-weight:700;font-size:1rem;font-family:var(--mono);color:var(--navy);margin-bottom:9px}
+.c-foot{display:flex;justify-content:space-between;align-items:center}
+.c-assignee{display:flex;align-items:center;gap:5px}
+.mini-av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-size:.55rem;font-weight:700}
+.c-assignee span{font-size:.68rem;color:var(--muted)}
+.c-channel{font-size:.68rem;color:var(--muted)}
+
+/* ── LIST ── */
+.ltable-wrap{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.ltable-scroll{overflow-x:auto}
+.ltable{width:100%;border-collapse:collapse;font-size:.8rem}
+.ltable thead tr{background:linear-gradient(90deg,#f8faff,#f0f4ff)}
+.ltable th{text-align:left;padding:11px 13px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:2px solid var(--border)}
+.ltable th:hover{color:var(--navy)}
+.ltable td{padding:11px 13px;border-bottom:1px solid var(--border-light)}
+.ltable tbody tr{cursor:pointer;transition:.1s}
+.ltable tbody tr:hover{background:var(--light-blue)}
+.ltable .td-id{font-family:var(--mono);font-size:.72rem;color:var(--navy);font-weight:500}
+.ltable .td-client{font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ltable .td-prem{font-family:var(--mono);font-weight:600;color:var(--navy)}
+
+.status-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:7px;font-size:.72rem;font-weight:600}
+.prio-dot{font-weight:700;font-size:.72rem}
+.margin-val{font-family:var(--mono);font-weight:600}
+.m-green{color:var(--success)}.m-amber{color:var(--warn)}.m-red{color:var(--error)}
+
+/* ── DASHBOARD ── */
+.dash{display:flex;flex-direction:column;gap:20px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px}
+.kpi{background:var(--white);border-radius:var(--radius-lg);padding:18px 20px;border:1px solid var(--border);border-top:3px solid var(--border);box-shadow:var(--shadow)}
+.kpi .kl{font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:4px}
+.kpi .kv{font-size:1.5rem;font-weight:700;font-family:var(--mono);color:var(--navy)}
+.kpi .ks{font-size:.68rem;color:var(--muted);margin-top:2px}
+.d2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dpanel{background:var(--white);border-radius:var(--radius-lg);padding:22px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.dpanel h3{font-family:var(--serif);font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:16px}
+.bar-row{margin-bottom:11px}
+.bar-lbl{display:flex;justify-content:space-between;margin-bottom:3px;font-size:.78rem}
+.bar-lbl .bn{font-weight:500}.bar-lbl .bn span{color:var(--muted)}
+.bar-lbl .bv{font-family:var(--mono);font-size:.72rem;font-weight:600}
+.bar-track{height:7px;background:var(--light);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+
+/* ── CASE ALLOCATION ── */
+.alloc-section{display:flex;flex-direction:column;gap:18px}
+.alloc-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.alloc-card-hd{background:linear-gradient(90deg,var(--navy),var(--blue-mid));padding:14px 22px;display:flex;align-items:center;gap:9px}
+.alloc-card-hd .ac-ico{width:28px;height:28px;background:rgba(255,255,255,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.alloc-card-hd h3{color:#fff;font-family:var(--serif);font-size:1rem;font-weight:600}
+.alloc-card-hd p{color:rgba(255,255,255,.6);font-size:.68rem;margin-top:1px}
+.alloc-body{padding:22px}
+
+/* Input Zone */
+.input-zone{display:flex;gap:16px;margin-bottom:16px}
+.iz-paste{flex:2}
+.iz-upload{flex:1;display:flex;flex-direction:column;gap:10px}
+.iz-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mid);margin-bottom:4px}
+.paste-area{width:100%;min-height:140px;padding:12px;border:1.5px dashed var(--border);border-radius:var(--radius);font-family:var(--mono);font-size:.75rem;color:var(--dark);background:var(--light);resize:vertical;outline:none;transition:.15s}
+.paste-area:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(0,87,184,.08)}
+.paste-area::placeholder{color:var(--muted)}
+.upload-drop{border:1.5px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:.15s;background:var(--light)}
+.upload-drop:hover{border-color:var(--blue);background:var(--light-blue)}
+.upload-drop svg{margin:0 auto 8px;display:block;color:var(--navy)}
+.upload-drop p{font-size:.78rem;color:var(--mid);font-weight:500}
+.upload-drop small{font-size:.65rem;color:var(--muted)}
+.upload-drop input{display:none}
+
+/* Config Panel */
+.alloc-config{display:flex;gap:14px;flex-wrap:wrap;padding:14px 18px;background:var(--light);border-radius:var(--radius);border:1px solid var(--border-light);margin-bottom:16px}
+.cfg-group{display:flex;flex-direction:column;gap:3px}
+.cfg-group label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mid)}
+.cfg-input{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.8rem;font-family:var(--font);background:#fff;outline:none;width:120px;color:var(--dark)}
+.cfg-input:focus{border-color:var(--blue)}
+.cfg-input.sm{width:70px}
+
+/* Allocation Results */
+.alloc-results{margin-top:16px}
+.alloc-summary{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.as-card{flex:1;min-width:140px;background:var(--light);border-radius:var(--radius);padding:14px;border:1px solid var(--border-light);text-align:center}
+.as-card .as-name{font-size:.78rem;font-weight:700;color:var(--navy);margin-bottom:4px}
+.as-card .as-count{font-size:1.6rem;font-weight:700;font-family:var(--mono);color:var(--navy)}
+.as-card .as-pct{font-size:.72rem;color:var(--muted)}
+.alloc-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.alloc-table thead{background:linear-gradient(90deg,#f8faff,#f0f4ff)}
+.alloc-table th{text-align:left;padding:10px 12px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid var(--border)}
+.alloc-table td{padding:10px 12px;border-bottom:1px solid var(--border-light)}
+.alloc-table tbody tr:nth-child(even){background:var(--row-even)}
+.alloc-table tbody tr:hover{background:var(--light-blue)}
+.uw-badge{padding:3px 10px;border-radius:6px;font-size:.72rem;font-weight:600}
+.uw-maruf{background:#e0f2fe;color:#0369a1}
+.uw-prateek{background:#dcfce7;color:#15803d}
+.uw-auto{font-style:italic;opacity:.7;font-size:.65rem;margin-left:4px}
+.prio-p0{background:#fef2f2;color:var(--error);padding:2px 8px;border-radius:5px;font-size:.68rem;font-weight:600}
+.prio-p1{background:#fef9c3;color:#a16207;padding:2px 8px;border-radius:5px;font-size:.68rem;font-weight:600}
+.prio-p2{background:var(--light);color:var(--muted);padding:2px 8px;border-radius:5px;font-size:.68rem;font-weight:600}
+.type-fresh{color:var(--success);font-weight:600}
+.type-renewal{color:var(--info);font-weight:600}
+
+/* Webhook Panel */
+.webhook-panel{background:var(--light);border:1px solid var(--border-light);border-radius:var(--radius);padding:16px 18px;margin-top:16px}
+.webhook-panel h4{font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.webhook-url{background:var(--dark);color:#a5f3fc;padding:10px 14px;border-radius:7px;font-family:var(--mono);font-size:.72rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.webhook-url code{word-break:break-all}
+.copy-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:4px 10px;border-radius:5px;font-size:.68rem;cursor:pointer;font-family:var(--font);font-weight:600;transition:.15s}
+.copy-btn:hover{background:rgba(255,255,255,.25)}
+.wh-note{font-size:.7rem;color:var(--muted);line-height:1.5}
+
+/* ── DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;z-index:200;justify-content:flex-end}
+.drawer-overlay.open{display:flex}
+.drawer-bg{position:absolute;inset:0;background:rgba(0,30,70,.4);backdrop-filter:blur(2px)}
+.drawer{position:relative;width:520px;max-width:92vw;background:var(--white);box-shadow:-8px 0 32px rgba(0,48,135,.12);display:flex;flex-direction:column;animation:slideIn .25s ease-out}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.drawer-hd{padding:18px 22px;border-bottom:1px solid var(--border);background:var(--light)}
+.drawer-hd-top{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
+.drawer-hd .d-id{font-family:var(--mono);font-size:.72rem;color:var(--navy);font-weight:500;margin-bottom:3px}
+.drawer-hd h2{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--navy)}
+.drawer-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.2rem;padding:4px;transition:.15s}
+.drawer-close:hover{color:var(--dark)}
+.drawer-badges{display:flex;gap:7px;flex-wrap:wrap}
+.status-flow{padding:12px 22px;border-bottom:1px solid var(--border);display:flex;gap:3px;align-items:center}
+.sf-btn{flex:1;padding:6px 3px;border-radius:5px;border:none;font-size:.6rem;font-weight:600;cursor:pointer;transition:.15s;text-align:center;font-family:var(--font)}
+.sf-arrow{color:var(--muted);font-size:.6rem}
+.drawer-tabs{display:flex;border-bottom:1px solid var(--border)}
+.dtab{flex:1;padding:11px;border:none;background:none;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--muted);font-family:var(--font);border-bottom:2px solid transparent;transition:.15s}
+.dtab.active{color:var(--navy);border-bottom-color:var(--navy)}
+.drawer-body{flex:1;overflow-y:auto;padding:18px 22px}
+.det-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.det-row .dl{font-size:.78rem;color:var(--muted)}.det-row .dv{font-size:.78rem;font-weight:500;text-align:right}
+.note-card{padding:13px;background:var(--light);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:9px}
+.note-card .nt{font-size:.78rem;line-height:1.55;margin-bottom:7px}
+.note-card .nm{display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted)}
+.empty-st{text-align:center;padding:32px;color:var(--muted)}
+.tl{position:relative;padding-left:26px}
+.tl::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:20px}
+.tl-dot{position:absolute;left:-22px;top:3px;width:11px;height:11px;border-radius:50%;border:2px solid #fff}
+.tl-date{font-size:.68rem;color:var(--muted);margin-bottom:1px}
+.tl-title{font-size:.78rem;font-weight:600}
+.tl-desc{font-size:.72rem;color:var(--muted)}
+.drawer-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px}
+.drawer-foot select{flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-family:var(--font);cursor:pointer;background:var(--white)}
+.dbtn{padding:9px 18px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:var(--font);font-size:.78rem;transition:.15s}
+.dbtn-ok{background:var(--success);color:#fff}
+.dbtn-no{background:var(--error);color:#fff}
+
+/* ── MODAL ── */
+.modal-ov{display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal-bg{position:absolute;inset:0;background:rgba(0,30,70,.45);backdrop-filter:blur(3px)}
+.modal{position:relative;background:var(--white);border-radius:16px;width:560px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,48,135,.2);animation:mfade .2s ease-out}
+@keyframes mfade{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-hd{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-hd h2{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--navy)}
+.modal-body{padding:22px 26px;display:flex;flex-direction:column;gap:14px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mid)}
+.finput{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.8rem;font-family:var(--font);background:var(--light);outline:none;width:100%;color:var(--dark);transition:.15s}
+.finput:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,87,184,.08)}
+.frow{display:grid;gap:12px}.fr2{grid-template-columns:1fr 1fr}.fr3{grid-template-columns:1fr 1fr 1fr}
+.modal-foot{padding:14px 26px 22px;display:flex;justify-content:flex-end;gap:8px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.d2col{grid-template-columns:1fr}}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .phdr{padding:0 14px}
+  .toolbar{padding:10px 14px}
+  .content{padding:14px!important}
+  .fr2,.fr3{grid-template-columns:1fr}
+  .input-zone{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="phdr">
+  <div class="phdr-l">
+    <div class="logo-pill"><span>Bajaj Health</span></div>
+    <div class="phdr-ttl">Quote Tracker & Case Allocation<small>OPD Pricing Suite · BFHL</small></div>
+  </div>
+  <div class="phdr-r">
+    <span class="hbadge">OPD Suite v2.0</span>
+    <div class="user-pill">
+      <div class="user-av">PS</div>
+      <div><div class="uname">Prateek S.</div><div class="urole" id="userRoleLabel">Admin</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="app-body">
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-title">Views</div>
+    <button class="sb-btn active" onclick="switchView('board')" id="nav-board">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Board
+    </button>
+    <button class="sb-btn" onclick="switchView('list')" id="nav-list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      List
+    </button>
+    <button class="sb-btn" onclick="switchView('dashboard')" id="nav-dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Dashboard
+    </button>
+    <button class="sb-btn" onclick="switchView('allocation')" id="nav-allocation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Case Allocation
+    </button>
+  </div>
+
+  <hr class="sb-divider">
+  <div class="sb-section">
+    <div class="sb-title">Quick Filters</div>
+    <button class="sb-btn active" onclick="setTab('all')" id="tab-all">All Quotes <span class="sb-count" id="cnt-all">12</span></button>
+    <button class="sb-btn" onclick="setTab('my')" id="tab-my">My Quotes <span class="sb-count" id="cnt-my">6</span></button>
+    <button class="sb-btn" onclick="setTab('overdue')" id="tab-overdue">Overdue <span class="sb-count" id="cnt-overdue">0</span></button>
+  </div>
+
+  <hr class="sb-divider">
+  <div class="sb-section">
+    <div class="sb-title">Role View</div>
+    <select class="sb-role" id="roleSelect" onchange="setRole(this.value)">
+      <option value="ADMIN">Admin (Tier 1)</option>
+      <option value="PRICING_LEAD">Pricing Lead (Tier 2)</option>
+      <option value="UNDERWRITER">Underwriter (Tier 3)</option>
+      <option value="SALES_HEAD">Sales Head (Tier 4)</option>
+      <option value="SALES_EXEC">Sales Exec (Tier 5)</option>
+    </select>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main-area">
+  <div class="toolbar">
+    <h1 id="toolbarTitle">Quote Board<small id="toolbarSub">12 quotes · Pipeline ₹36.47 Cr</small></h1>
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="Search quotes, clients, brokers..." oninput="onSearch(this.value)" id="searchInput">
+    </div>
+    <button class="tbtn" onclick="toggleFilters()" id="filterToggle">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filters <span class="filter-badge" id="filterBadge" style="display:none">0</span>
+    </button>
+    <button class="tbtn tbtn-primary" onclick="openNewQuote()">+ New Quote</button>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar" id="filterBar">
+    <div class="fd" id="filter-status"><button class="fd-btn" onclick="toggleFD('status')">Status ▾</button><div class="fd-menu" id="menu-status"></div></div>
+    <div class="fd" id="filter-product"><button class="fd-btn" onclick="toggleFD('product')">Product ▾</button><div class="fd-menu" id="menu-product"></div></div>
+    <div class="fd" id="filter-priority"><button class="fd-btn" onclick="toggleFD('priority')">Priority ▾</button><div class="fd-menu" id="menu-priority"></div></div>
+    <div class="fd" id="filter-channel"><button class="fd-btn" onclick="toggleFD('channel')">Channel ▾</button><div class="fd-menu" id="menu-channel"></div></div>
+    <div class="fd" id="filter-assignee"><button class="fd-btn" onclick="toggleFD('assignee')">Assignee ▾</button><div class="fd-menu" id="menu-assignee"></div></div>
+    <button class="tbtn" onclick="clearFilters()" id="clearFBtn" style="display:none;border-color:var(--error);color:var(--error);font-size:.72rem;padding:5px 12px">Clear All</button>
+  </div>
+
+  <!-- Content -->
+  <div class="content board-mode" id="contentArea">
+    <div id="boardView"></div>
+    <div id="listView" style="display:none"></div>
+    <div id="dashboardView" style="display:none"></div>
+    <div id="allocationView" style="display:none"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ DRAWER ═══ -->
+<div class="drawer-overlay" id="drawerOv"><div class="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer">
+  <div class="drawer-hd"><div class="drawer-hd-top"><div><div class="d-id" id="dId"></div><h2 id="dClient"></h2></div><button class="drawer-close" onclick="closeDrawer()">✕</button></div><div class="drawer-badges" id="dBadges"></div></div>
+  <div class="status-flow" id="dFlow"></div>
+  <div class="drawer-tabs"><button class="dtab active" onclick="dTab('details')" id="dt-details">Details</button><button class="dtab" onclick="dTab('notes')" id="dt-notes">Notes</button><button class="dtab" onclick="dTab('timeline')" id="dt-timeline">Timeline</button></div>
+  <div class="drawer-body" id="dBody"></div>
+  <div class="drawer-foot" id="dFoot"></div>
+</div></div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-ov" id="modalOv"><div class="modal-bg" onclick="closeNewQuote()"></div>
+<div class="modal">
+  <div class="modal-hd"><h2>New Quote</h2><button class="drawer-close" onclick="closeNewQuote()">✕</button></div>
+  <div class="modal-body">
+    <div class="fg"><label>Client Name *</label><input class="finput" id="nq-client" placeholder="e.g., Tata Consultancy Services"></div>
+    <div class="frow fr2"><div class="fg"><label>Product *</label><select class="finput" id="nq-product"><option>WCP 2.0</option><option>OPD Flex</option><option>OPD Essential</option><option>GMC Add-on</option><option>Small Ticket OPD</option></select></div><div class="fg"><label>Channel</label><select class="finput" id="nq-channel"><option>Direct</option><option>Broker</option><option>Banca</option><option>Digital</option><option>Agency</option></select></div></div>
+    <div class="frow fr3"><div class="fg"><label>Lives *</label><input class="finput" type="number" id="nq-lives" placeholder="5000"></div><div class="fg"><label>Premium (₹) *</label><input class="finput" type="number" id="nq-premium" placeholder="2500000"></div><div class="fg"><label>Margin %</label><input class="finput" type="number" id="nq-margin" placeholder="15"></div></div>
+    <div class="frow fr2"><div class="fg"><label>Priority</label><select class="finput" id="nq-priority"><option value="HIGH">High</option><option value="MEDIUM" selected>Medium</option><option value="LOW">Low</option></select></div><div class="fg"><label>Due Date</label><input class="finput" type="date" id="nq-due"></div></div>
+    <div class="frow fr2"><div class="fg"><label>Broker</label><input class="finput" id="nq-broker" placeholder="e.g., Marsh McLennan"></div><div class="fg"><label>Region</label><input class="finput" id="nq-region" placeholder="e.g., Mumbai" value="Pune"></div></div>
+  </div>
+  <div class="modal-foot"><button class="tbtn" onclick="closeNewQuote()">Cancel</button><button class="tbtn tbtn-primary" onclick="saveNewQuote()">Create Quote</button></div>
+</div></div>
+
+<!-- ═══════════ JAVASCRIPT ═══════════ -->
+<script>
+// ─── CONFIG ───
+const ST={DRAFT:{l:'Draft',c:'#6B7084',bg:'#E8EAF0',i:'✎'},SUBMITTED:{l:'Submitted',c:'#0284C7',bg:'#E0F2FE',i:'↗'},UNDER_REVIEW:{l:'Under Review',c:'#EA580C',bg:'#FFF7ED',i:'⏳'},NEGOTIATION:{l:'Negotiation',c:'#7C3AED',bg:'#EDE9FE',i:'⇄'},APPROVED:{l:'Approved',c:'#16A34A',bg:'#DCFCE7',i:'✓'},REJECTED:{l:'Rejected',c:'#DC2626',bg:'#FEF2F2',i:'✕'},EXPIRED:{l:'Expired',c:'#9CA3AF',bg:'#F3F4F6',i:'⊘'}};
+const PR={HIGH:{l:'High',c:'#DC2626'},MEDIUM:{l:'Medium',c:'#EA580C'},LOW:{l:'Low',c:'#16A34A'}};
+const PRODS=['WCP 2.0','OPD Flex','OPD Essential','GMC Add-on','Small Ticket OPD'];
+const CHS=['Direct','Broker','Banca','Digital','Agency'];
+const ROLES={ADMIN:'Admin',PRICING_LEAD:'Pricing Lead',UNDERWRITER:'Underwriter',SALES_HEAD:'Sales Head',SALES_EXEC:'Sales Exec'};
+const BCOLS=['DRAFT','SUBMITTED','UNDER_REVIEW','NEGOTIATION','APPROVED','REJECTED'];
+const SFLOW=['DRAFT','SUBMITTED','UNDER_REVIEW','NEGOTIATION','APPROVED'];
+
+let quotes=[
+  {id:'Q-2026-001',client:'Tata Consultancy Services',product:'WCP 2.0',lives:12500,premium:4850000,status:'APPROVED',priority:'HIGH',channel:'Direct',assignee:'Prateek S.',created:'2026-01-15',updated:'2026-02-20',dueDate:'2026-03-01',broker:'—',region:'Mumbai',notes:[{text:'Large corporate deal, custom wellness basket',date:'2026-01-16',by:'Prateek S.'},{text:'Approved after 2nd revision with 8% loading',date:'2026-02-20',by:'Prateek S.'}],revisions:2,margin:18.5},
+  {id:'Q-2026-002',client:'Infosys BPM',product:'OPD Flex',lives:8200,premium:2870000,status:'UNDER_REVIEW',priority:'HIGH',channel:'Broker',assignee:'Rahul M.',created:'2026-02-01',updated:'2026-03-08',dueDate:'2026-03-15',broker:'Marsh McLennan',region:'Bengaluru',notes:[{text:'Broker pushing for 5% discount on base rate',date:'2026-02-10',by:'Rahul M.'}],revisions:1,margin:14.2},
+  {id:'Q-2026-003',client:'Wipro Technologies',product:'OPD Essential',lives:6800,premium:1632000,status:'NEGOTIATION',priority:'MEDIUM',channel:'Broker',assignee:'Prateek S.',created:'2026-02-10',updated:'2026-03-09',dueDate:'2026-03-20',broker:'Aon India',region:'Pune',notes:[{text:'Client wants OPD + dental combo',date:'2026-02-12',by:'Prateek S.'}],revisions:3,margin:12.8},
+  {id:'Q-2026-004',client:'HCL Technologies',product:'GMC Add-on',lives:15000,premium:6750000,status:'SUBMITTED',priority:'HIGH',channel:'Direct',assignee:'Sneha K.',created:'2026-03-01',updated:'2026-03-10',dueDate:'2026-03-25',broker:'—',region:'Noida',notes:[{text:'RFP response submitted, awaiting feedback',date:'2026-03-01',by:'Sneha K.'}],revisions:0,margin:16.1},
+  {id:'Q-2026-005',client:'Bajaj Auto Ltd',product:'WCP 2.0',lives:4200,premium:1680000,status:'DRAFT',priority:'MEDIUM',channel:'Direct',assignee:'Prateek S.',created:'2026-03-05',updated:'2026-03-10',dueDate:'2026-03-30',broker:'—',region:'Pune',notes:[],revisions:0,margin:20.1},
+  {id:'Q-2026-006',client:'Reliance Retail',product:'Small Ticket OPD',lives:22000,premium:3300000,status:'APPROVED',priority:'HIGH',channel:'Banca',assignee:'Rahul M.',created:'2026-01-20',updated:'2026-02-28',dueDate:'2026-03-05',broker:'—',region:'Mumbai',notes:[{text:'High volume deal — special STP rates applied',date:'2026-01-22',by:'Rahul M.'}],revisions:1,margin:11.5},
+  {id:'Q-2026-007',client:'Mahindra Finance',product:'OPD Flex',lives:3100,premium:1085000,status:'REJECTED',priority:'LOW',channel:'Agency',assignee:'Sneha K.',created:'2026-01-10',updated:'2026-02-15',dueDate:'2026-02-20',broker:'—',region:'Mumbai',notes:[{text:'Client went with competitor — pricing gap ~12%',date:'2026-02-15',by:'Sneha K.'}],revisions:2,margin:8.3},
+  {id:'Q-2026-008',client:'Tech Mahindra',product:'WCP 2.0',lives:9500,premium:3800000,status:'UNDER_REVIEW',priority:'MEDIUM',channel:'Broker',assignee:'Prateek S.',created:'2026-02-25',updated:'2026-03-10',dueDate:'2026-03-22',broker:'Willis Towers Watson',region:'Hyderabad',notes:[{text:'Complex structure — multi-location pricing needed',date:'2026-02-26',by:'Prateek S.'}],revisions:1,margin:15.7},
+  {id:'Q-2026-009',client:'Godrej Industries',product:'OPD Essential',lives:2800,premium:672000,status:'EXPIRED',priority:'LOW',channel:'Direct',assignee:'Rahul M.',created:'2025-12-01',updated:'2026-01-31',dueDate:'2026-01-15',broker:'—',region:'Mumbai',notes:[{text:'Quote validity lapsed — client non-responsive',date:'2026-01-31',by:'Rahul M.'}],revisions:0,margin:13.4},
+  {id:'Q-2026-010',client:'Adani Green Energy',product:'GMC Add-on',lives:5600,premium:2520000,status:'DRAFT',priority:'MEDIUM',channel:'Digital',assignee:'Sneha K.',created:'2026-03-08',updated:'2026-03-10',dueDate:'2026-04-01',broker:'—',region:'Ahmedabad',notes:[],revisions:0,margin:17.9},
+  {id:'Q-2026-011',client:'L&T Infotech',product:'Small Ticket OPD',lives:7400,premium:1110000,status:'SUBMITTED',priority:'HIGH',channel:'Broker',assignee:'Prateek S.',created:'2026-03-02',updated:'2026-03-09',dueDate:'2026-03-18',broker:'Gallagher India',region:'Mumbai',notes:[{text:'Fast-track request from broker',date:'2026-03-03',by:'Prateek S.'}],revisions:0,margin:10.6},
+  {id:'Q-2026-012',client:'Zomato Ltd',product:'WCP 2.0',lives:18000,premium:7200000,status:'NEGOTIATION',priority:'HIGH',channel:'Direct',assignee:'Prateek S.',created:'2026-02-15',updated:'2026-03-11',dueDate:'2026-03-28',broker:'—',region:'Gurugram',notes:[{text:'CEO-level engagement — needs custom wellness modules',date:'2026-02-16',by:'Prateek S.'},{text:'Counter-offer received, reviewing margin impact',date:'2026-03-11',by:'Prateek S.'}],revisions:4,margin:13.2},
+];
+
+// ─── STATE ───
+let curView='board',curTab='all',curRole='ADMIN',search='',sortF='updated',sortD='desc';
+let filters={status:[],product:[],priority:[],channel:[],assignee:[]};
+let selQuote=null,dTabCur='details';
+let allocResults=null;
+
+// ─── UTILS ───
+const fmt=n=>n>=1e7?'₹'+(n/1e7).toFixed(2)+' Cr':n>=1e5?'₹'+(n/1e5).toFixed(2)+' L':'₹'+n.toLocaleString('en-IN');
+const isOD=q=>!['APPROVED','REJECTED','EXPIRED'].includes(q.status)&&new Date(q.dueDate)<new Date();
+const daysBtw=(a,b)=>Math.ceil((new Date(b)-new Date(a))/864e5);
+const ini=n=>n.split(' ').map(x=>x[0]).join('');
+const td=()=>new Date().toISOString().slice(0,10);
+
+function getFiltered(){
+  let r=[...quotes];
+  if(search){const s=search.toLowerCase();r=r.filter(q=>q.client.toLowerCase().includes(s)||q.id.toLowerCase().includes(s)||q.product.toLowerCase().includes(s)||(q.broker&&q.broker.toLowerCase().includes(s)));}
+  if(curTab==='my')r=r.filter(q=>q.assignee==='Prateek S.');
+  if(curTab==='overdue')r=r.filter(isOD);
+  Object.entries(filters).forEach(([k,v])=>{if(v.length)r=r.filter(q=>v.includes(q[k]));});
+  r.sort((a,b)=>{let av=a[sortF],bv=b[sortF];if(typeof av==='string'){av=av.toLowerCase();bv=bv.toLowerCase();}return sortD==='asc'?(av>bv?1:-1):(av<bv?1:-1);});
+  return r;
+}
+function getMetrics(){
+  const act=quotes.filter(q=>!['REJECTED','EXPIRED'].includes(q.status));
+  const app=quotes.filter(q=>q.status==='APPROVED');
+  return{pipeline:act.reduce((s,q)=>s+q.premium,0),won:app.reduce((s,q)=>s+q.premium,0),avgM:act.length?(act.reduce((s,q)=>s+q.margin,0)/act.length).toFixed(1):0,od:quotes.filter(isOD).length,lives:act.reduce((s,q)=>s+q.lives,0),conv:quotes.length?((app.length/quotes.length)*100).toFixed(0):0,total:quotes.length,active:act.length};
+}
+
+// ─── RENDER ───
+function render(){
+  const f=getFiltered(),m=getMetrics();
+  const titles={board:'Quote Board',list:'Quote List',dashboard:'Pipeline Dashboard',allocation:'Case Allocation'};
+  document.getElementById('toolbarTitle').innerHTML=titles[curView]+'<small id="toolbarSub">'+f.length+' quotes · Pipeline '+fmt(m.pipeline)+'</small>';
+  document.getElementById('cnt-all').textContent=quotes.length;
+  document.getElementById('cnt-my').textContent=quotes.filter(q=>q.assignee==='Prateek S.').length;
+  document.getElementById('cnt-overdue').textContent=m.od;
+  const fc=Object.values(filters).reduce((s,v)=>s+v.length,0);
+  const badge=document.getElementById('filterBadge');
+  badge.style.display=fc?'inline':'none';badge.textContent=fc;
+  document.getElementById('filterToggle').classList.toggle('active',fc>0);
+  document.getElementById('clearFBtn').style.display=fc?'inline-flex':'none';
+  const ca=document.getElementById('contentArea');
+  ca.className=curView==='board'?'content board-mode':'content';
+  ['boardView','listView','dashboardView','allocationView'].forEach(v=>{document.getElementById(v).style.display='none';});
+  if(curView==='board'){document.getElementById('boardView').style.display='block';renderBoard(f);}
+  if(curView==='list'){document.getElementById('listView').style.display='block';renderList(f);}
+  if(curView==='dashboard'){document.getElementById('dashboardView').style.display='block';renderDash(f,m);}
+  if(curView==='allocation'){document.getElementById('allocationView').style.display='block';renderAlloc();}
+}
+
+// ─── BOARD ───
+function renderBoard(data){
+  let h='<div class="board">';
+  BCOLS.forEach(s=>{const col=data.filter(q=>q.status===s);const st=ST[s];
+    h+=`<div class="bcol"><div class="bcol-hd" style="border-bottom-color:${st.c}"><div class="st-lbl" style="color:${st.c}">${st.i} ${st.l}</div><span class="st-cnt" style="background:${st.bg};color:${st.c}">${col.length}</span></div><div class="bcol-body">`;
+    if(!col.length)h+='<div class="bcol-empty">No quotes</div>';
+    else col.forEach(q=>{h+=cardHTML(q);});
+    h+='</div></div>';});
+  h+='</div>';document.getElementById('boardView').innerHTML=h;
+}
+function cardHTML(q){
+  const pr=PR[q.priority],ov=isOD(q);
+  return`<div class="qcard ${ov?'overdue':''}" style="border-left-color:${pr.c}" onclick="openDrawer('${q.id}')"><div class="c-top"><span class="c-id">${q.id}</span>${ov?'<span class="obadge">OVERDUE</span>':''}</div><div class="c-client">${q.client}</div><div class="c-tags"><span class="tag tag-prod">${q.product}</span><span class="tag tag-lives">${q.lives.toLocaleString()} lives</span></div><div class="c-premium">${fmt(q.premium)}</div><div class="c-foot"><div class="c-assignee"><div class="mini-av">${ini(q.assignee)}</div><span>${q.assignee}</span></div><span class="c-channel">${q.channel}</span></div></div>`;
+}
+
+// ─── LIST ───
+function renderList(data){
+  const ar=f=>sortF===f?(sortD==='asc'?' ▲':' ▼'):'';
+  let h=`<div class="ltable-wrap"><div class="ltable-scroll"><table class="ltable"><thead><tr>
+    <th onclick="setSort('id')">ID${ar('id')}</th><th onclick="setSort('client')">Client${ar('client')}</th><th onclick="setSort('product')">Product${ar('product')}</th><th onclick="setSort('status')">Status${ar('status')}</th><th onclick="setSort('premium')">Premium${ar('premium')}</th><th onclick="setSort('lives')">Lives${ar('lives')}</th><th onclick="setSort('margin')">Margin${ar('margin')}</th><th onclick="setSort('priority')">Priority${ar('priority')}</th><th onclick="setSort('assignee')">Owner${ar('assignee')}</th><th onclick="setSort('dueDate')">Due${ar('dueDate')}</th></tr></thead><tbody>`;
+  data.forEach(q=>{const st=ST[q.status],pr=PR[q.priority],ov=isOD(q),mc=q.margin>=15?'m-green':q.margin>=10?'m-amber':'m-red';
+    h+=`<tr onclick="openDrawer('${q.id}')"><td class="td-id">${q.id}</td><td class="td-client">${q.client}</td><td><span class="tag tag-prod">${q.product}</span></td><td><span class="status-badge" style="background:${st.bg};color:${st.c}">${st.i} ${st.l}</span></td><td class="td-prem">${fmt(q.premium)}</td><td style="text-align:right">${q.lives.toLocaleString()}</td><td><span class="margin-val ${mc}">${q.margin}%</span></td><td><span class="prio-dot" style="color:${pr.c}">● ${pr.l}</span></td><td style="font-size:.72rem">${q.assignee}</td><td style="font-size:.72rem;${ov?'color:var(--error);font-weight:600':''}">${q.dueDate}${ov?' ⚠':''}</td></tr>`;});
+  h+='</tbody></table></div></div>';document.getElementById('listView').innerHTML=h;
+}
+
+// ─── DASHBOARD ───
+function renderDash(data,m){
+  const sData=Object.entries(ST).map(([k,v])=>({k,l:v.l,c:v.c,cnt:quotes.filter(q=>q.status===k).length,p:quotes.filter(q=>q.status===k).reduce((s,q)=>s+q.premium,0)})).filter(d=>d.cnt>0);
+  const mSP=Math.max(...sData.map(d=>d.p),1);
+  const pData=PRODS.map(p=>({p,cnt:quotes.filter(q=>q.product===p).length,pr:quotes.filter(q=>q.product===p).reduce((s,q)=>s+q.premium,0),mg:quotes.filter(q=>q.product===p).length?(quotes.filter(q=>q.product===p).reduce((s,q)=>s+q.margin,0)/quotes.filter(q=>q.product===p).length).toFixed(1):0})).filter(d=>d.cnt>0);
+  const mPP=Math.max(...pData.map(d=>d.pr),1);
+  const kpis=[{l:'Total Pipeline',v:fmt(m.pipeline),s:`${m.active} active`,c:'var(--navy)'},{l:'Won Revenue',v:fmt(m.won),s:`${m.conv}% conversion`,c:'var(--success)'},{l:'Avg. Margin',v:m.avgM+'%',s:`Across ${m.active} active`,c:'var(--blue)'},{l:'Total Lives',v:m.lives.toLocaleString(),s:'In active pipeline',c:'var(--warn)'},{l:'Overdue',v:m.od,s:'Needs attention',c:m.od>0?'var(--error)':'var(--success)'}];
+  let h='<div class="dash"><div class="kpi-row">';
+  kpis.forEach(k=>{h+=`<div class="kpi" style="border-top-color:${k.c}"><div class="kl">${k.l}</div><div class="kv">${k.v}</div><div class="ks">${k.s}</div></div>`;});
+  h+='</div><div class="d2col">';
+  h+='<div class="dpanel"><h3>Pipeline by Status</h3>';
+  sData.forEach(d=>{h+=`<div class="bar-row"><div class="bar-lbl"><span class="bn">${d.l} <span>(${d.cnt})</span></span><span class="bv">${fmt(d.p)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${d.p/mSP*100}%;background:${d.c}"></div></div></div>`;});
+  h+='</div><div class="dpanel"><h3>Product Mix</h3>';
+  pData.forEach(d=>{const mc=parseFloat(d.mg)>=15?'m-green':parseFloat(d.mg)>=10?'m-amber':'m-red';
+    h+=`<div class="bar-row"><div class="bar-lbl"><span class="bn">${d.p} <span>(${d.cnt})</span></span><span><span class="margin-val ${mc}" style="margin-right:10px">${d.mg}%</span><span class="bv">${fmt(d.pr)}</span></span></div><div class="bar-track"><div class="bar-fill" style="width:${d.pr/mPP*100}%;background:linear-gradient(90deg,var(--navy),var(--blue))"></div></div></div>`;});
+  h+='</div></div></div>';document.getElementById('dashboardView').innerHTML=h;
+}
+
+// ═════════════════════════════════════════
+//  CASE ALLOCATION ENGINE
+// ═════════════════════════════════════════
+function renderAlloc(){
+  let h=`<div class="alloc-section">
+  <div class="alloc-card">
+    <div class="alloc-card-hd"><div class="ac-ico">📋</div><div><h3>Paste / Upload Cases</h3><p>Paste from Copilot or upload .xlsx file</p></div></div>
+    <div class="alloc-body">
+      <div class="input-zone">
+        <div class="iz-paste">
+          <div class="iz-label">Paste table from Excel / Copilot</div>
+          <textarea class="paste-area" id="pasteArea" placeholder="Client Name&#9;RM name&#9;Date of Request&#9;Expected closure date&#9;Type&#9;No of Emp&#9;UW name&#9;Priority&#10;ABC India&#9;Rohit&#9;11-Mar-25&#9;13-Mar-25&#9;Fresh&#9;150&#9;Maruf&#9;P0&#10;XYZ&#9;Shubham&#9;11-Mar-25&#9;13-Mar-25&#9;Renewal&#9;250&#9;&#9;P1"></textarea>
+        </div>
+        <div class="iz-upload">
+          <div class="iz-label">Or upload Excel file</div>
+          <div class="upload-drop" onclick="document.getElementById('xlsxFile').click()" id="dropZone">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>Drop .xlsx here</p>
+            <small>or click to browse</small>
+            <input type="file" id="xlsxFile" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+          </div>
+          <div id="fileStatus" style="font-size:.72rem;color:var(--success);display:none"></div>
+        </div>
+      </div>
+
+      <div class="alloc-config">
+        <div class="cfg-group"><label>UW 1 Name</label><input class="cfg-input" id="uw1Name" value="Maruf"></div>
+        <div class="cfg-group"><label>UW 1 Share %</label><input class="cfg-input sm" id="uw1Pct" type="number" value="65"></div>
+        <div class="cfg-group"><label>UW 2 Name</label><input class="cfg-input" id="uw2Name" value="Prateek"></div>
+        <div class="cfg-group"><label>UW 2 Share %</label><input class="cfg-input sm" id="uw2Pct" type="number" value="35"></div>
+        <div class="cfg-group"><label>High Emp Threshold</label><input class="cfg-input sm" id="empThreshold" type="number" value="1000"></div>
+        <div style="display:flex;align-items:flex-end"><button class="tbtn tbtn-primary" onclick="runAllocation()" style="padding:7px 22px">⚡ Run Allocation</button></div>
+      </div>
+
+      <div id="allocResults"></div>
+
+      <div class="webhook-panel">
+        <h4>🔗 Power Automate Webhook</h4>
+        <div class="webhook-url"><code>POST /api/webhook/allocation</code><button class="copy-btn" onclick="copyWebhook()">Copy</button></div>
+        <div class="wh-note">
+          <strong>Ready for integration.</strong> When connected, Power Automate can POST the daily case table directly to this endpoint. The allocation engine will run automatically and results will appear here.<br><br>
+          <strong>Expected payload:</strong> JSON array of objects with keys: <code>client_name</code>, <code>rm_name</code>, <code>date_of_request</code>, <code>expected_closure</code>, <code>type</code>, <code>no_of_emp</code>, <code>uw_name</code>, <code>priority</code><br><br>
+          <strong>To set up:</strong> Create a Power Automate flow → Trigger: "When an email arrives" (from Copilot/team) → Action: "Parse Excel table" → Action: "HTTP POST to this URL with JSON body"
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+  document.getElementById('allocationView').innerHTML=h;
+}
+
+function handleFileUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const data=new Uint8Array(ev.target.result);
+    const wb=XLSX.read(data,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const csv=XLSX.utils.sheet_to_csv(ws,{FS:'\t'});
+    document.getElementById('pasteArea').value=csv;
+    const fs=document.getElementById('fileStatus');
+    fs.style.display='block';fs.textContent='✓ '+file.name+' loaded successfully';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Drag & drop
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz=document.getElementById('dropZone');
+  if(dz){
+    ['dragenter','dragover'].forEach(ev=>{dz.addEventListener(ev,e=>{e.preventDefault();dz.style.borderColor='var(--navy)';dz.style.background='var(--light-blue)';});});
+    ['dragleave','drop'].forEach(ev=>{dz.addEventListener(ev,e=>{e.preventDefault();dz.style.borderColor='';dz.style.background='';});});
+    dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f){document.getElementById('xlsxFile').files=e.dataTransfer.files;handleFileUpload({target:{files:[f]}});}});
+  }
+});
+
+function parseTable(raw){
+  const lines=raw.trim().split('\n').filter(l=>l.trim());
+  if(lines.length<2)return[];
+  // Detect separator
+  const sep=lines[0].includes('\t')?'\t':',';
+  const hdr=lines[0].split(sep).map(h=>h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=lines[i].split(sep).map(c=>c.trim());
+    if(cols.length<3)continue;
+    const obj={};
+    hdr.forEach((h,j)=>{obj[h]=cols[j]||'';});
+    // Normalize keys
+    rows.push({
+      client:obj.clientname||obj.client||cols[0]||'',
+      rm:obj.rmname||obj.rm||cols[1]||'',
+      dateReq:obj.dateofrequest||obj.date||cols[2]||'',
+      dateClosure:obj.expectedclosuredate||obj.closure||cols[3]||'',
+      type:obj.type||cols[4]||'',
+      emp:parseInt(obj.noofemp||obj.emp||obj.employees||cols[5])||0,
+      uwName:(obj.uwname||obj.uw||cols[6]||'').trim(),
+      priority:obj.priority||cols[7]||'P1'
+    });
+  }
+  return rows;
+}
+
+function runAllocation(){
+  const raw=document.getElementById('pasteArea').value;
+  if(!raw.trim()){alert('Please paste or upload case data first.');return;}
+
+  const cases=parseTable(raw);
+  if(!cases.length){alert('Could not parse any rows. Check the table format.');return;}
+
+  const uw1=document.getElementById('uw1Name').value.trim()||'Maruf';
+  const uw2=document.getElementById('uw2Name').value.trim()||'Prateek';
+  const pct1=parseInt(document.getElementById('uw1Pct').value)||65;
+  const pct2=parseInt(document.getElementById('uw2Pct').value)||35;
+  const empThresh=parseInt(document.getElementById('empThreshold').value)||1000;
+
+  // Separate pre-assigned vs unassigned
+  const preAssigned=[];
+  const unassigned=[];
+  cases.forEach(c=>{
+    if(c.uwName){
+      c.allocated=c.uwName;c.autoAssigned=false;
+      preAssigned.push(c);
+    }else{
+      unassigned.push(c);
+    }
+  });
+
+  // Allocation logic: 65/35 with emp-size tiebreaker for UW2
+  const total=unassigned.length;
+  const target1=Math.round(total*pct1/100);
+  const target2=total-target1;
+
+  // Sort unassigned: high emp first (for Prateek/UW2 preference)
+  const sorted=[...unassigned].sort((a,b)=>b.emp-a.emp);
+
+  let count1=0,count2=0;
+  sorted.forEach(c=>{
+    if(c.emp>=empThresh&&count2<target2){
+      c.allocated=uw2;c.autoAssigned=true;count2++;
+    }else if(count1<target1){
+      c.allocated=uw1;c.autoAssigned=true;count1++;
+    }else{
+      c.allocated=uw2;c.autoAssigned=true;count2++;
+    }
+  });
+
+  const all=[...preAssigned,...sorted];
+  const uw1Count=all.filter(c=>c.allocated.toLowerCase()===uw1.toLowerCase()).length;
+  const uw2Count=all.filter(c=>c.allocated.toLowerCase()===uw2.toLowerCase()).length;
+  const otherCount=all.length-uw1Count-uw2Count;
+
+  allocResults=all;
+  renderAllocResults(all,uw1,uw2,uw1Count,uw2Count,otherCount);
+}
+
+function renderAllocResults(cases,uw1,uw2,c1,c2,other){
+  let h=`<div class="alloc-results">
+    <div class="alloc-summary">
+      <div class="as-card"><div class="as-name">${uw1}</div><div class="as-count">${c1}</div><div class="as-pct">${cases.length?(c1/cases.length*100).toFixed(0):0}% of total</div></div>
+      <div class="as-card"><div class="as-name">${uw2}</div><div class="as-count">${c2}</div><div class="as-pct">${cases.length?(c2/cases.length*100).toFixed(0):0}% of total</div></div>
+      <div class="as-card"><div class="as-name">Total Cases</div><div class="as-count">${cases.length}</div><div class="as-pct">${cases.filter(c=>c.autoAssigned).length} auto-assigned</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="tbtn tbtn-primary" onclick="exportAllocXLSX()" style="font-size:.75rem;padding:7px 16px">⬇ Export to Excel</button>
+      <button class="tbtn" onclick="copyAllocTable()" style="font-size:.75rem;padding:7px 16px">📋 Copy Table</button>
+    </div>
+    <div style="overflow-x:auto"><table class="alloc-table"><thead><tr>
+      <th>#</th><th>Client Name</th><th>RM</th><th>Date of Request</th><th>Closure Date</th><th>Type</th><th>Employees</th><th>Allocated UW</th><th>Priority</th><th>Source</th>
+    </tr></thead><tbody>`;
+
+  cases.forEach((c,i)=>{
+    const uwCls=c.allocated.toLowerCase().includes('maruf')?'uw-maruf':c.allocated.toLowerCase().includes('prateek')?'uw-prateek':'';
+    const prioCls=c.priority.toUpperCase()==='P0'?'prio-p0':c.priority.toUpperCase()==='P1'?'prio-p1':'prio-p2';
+    const typeCls=c.type.toLowerCase().includes('fresh')?'type-fresh':'type-renewal';
+    h+=`<tr>
+      <td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">${i+1}</td>
+      <td style="font-weight:600">${c.client}</td>
+      <td>${c.rm}</td>
+      <td style="font-size:.72rem">${c.dateReq}</td>
+      <td style="font-size:.72rem">${c.dateClosure}</td>
+      <td><span class="${typeCls}">${c.type}</span></td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:${c.emp>=1000?'700':'400'};color:${c.emp>=1000?'var(--navy)':'inherit'}">${c.emp.toLocaleString()}</td>
+      <td><span class="uw-badge ${uwCls}">${c.allocated}</span>${c.autoAssigned?'<span class="uw-auto">(auto)</span>':''}</td>
+      <td><span class="${prioCls}">${c.priority}</span></td>
+      <td style="font-size:.68rem;color:var(--muted)">${c.autoAssigned?'Engine':'Pre-set'}</td>
+    </tr>`;
+  });
+  h+='</tbody></table></div></div>';
+  document.getElementById('allocResults').innerHTML=h;
+}
+
+function exportAllocXLSX(){
+  if(!allocResults||!allocResults.length)return;
+  const ws_data=[['#','Client Name','RM','Date of Request','Closure Date','Type','Employees','Allocated UW','Priority','Source']];
+  allocResults.forEach((c,i)=>{ws_data.push([i+1,c.client,c.rm,c.dateReq,c.dateClosure,c.type,c.emp,c.allocated,c.priority,c.autoAssigned?'Auto':'Pre-set']);});
+  const ws=XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols']=[{wch:4},{wch:25},{wch:14},{wch:14},{wch:14},{wch:10},{wch:10},{wch:14},{wch:8},{wch:8}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Allocation');
+  XLSX.writeFile(wb,'Case_Allocation_'+td().replace(/-/g,'')+'.xlsx');
+}
+
+function copyAllocTable(){
+  if(!allocResults||!allocResults.length)return;
+  let txt='#\tClient Name\tRM\tDate of Request\tClosure Date\tType\tEmployees\tAllocated UW\tPriority\tSource\n';
+  allocResults.forEach((c,i)=>{txt+=(i+1)+'\t'+c.client+'\t'+c.rm+'\t'+c.dateReq+'\t'+c.dateClosure+'\t'+c.type+'\t'+c.emp+'\t'+c.allocated+'\t'+c.priority+'\t'+(c.autoAssigned?'Auto':'Pre-set')+'\n';});
+  navigator.clipboard.writeText(txt).then(()=>{const b=event.target;b.textContent='✓ Copied!';setTimeout(()=>{b.textContent='📋 Copy Table';},1500);});
+}
+
+function copyWebhook(){navigator.clipboard.writeText('POST https://your-app.up.railway.app/api/webhook/allocation').then(()=>{const b=event.target;b.textContent='✓ Copied!';setTimeout(()=>{b.textContent='Copy';},1500);});}
+
+// ─── DRAWER ───
+function openDrawer(id){selQuote=quotes.find(q=>q.id===id);if(!selQuote)return;dTabCur='details';renderDrawer();document.getElementById('drawerOv').classList.add('open');}
+function closeDrawer(){document.getElementById('drawerOv').classList.remove('open');selQuote=null;}
+
+function renderDrawer(){
+  const q=selQuote;if(!q)return;const st=ST[q.status],pr=PR[q.priority],ov=isOD(q),age=daysBtw(q.created,td());
+  document.getElementById('dId').textContent=q.id;document.getElementById('dClient').textContent=q.client;
+  let bd=`<span class="status-badge" style="background:${st.bg};color:${st.c}">${st.i} ${st.l}</span><span class="status-badge" style="background:#fff;border:1px solid ${pr.c}40;color:${pr.c}">● ${pr.l}</span>`;
+  if(ov)bd+=`<span class="status-badge" style="background:var(--danger-bg,#fef2f2);color:var(--error)">⚠ OVERDUE</span>`;
+  document.getElementById('dBadges').innerHTML=bd;
+  const ci=SFLOW.indexOf(q.status);let fl='';
+  SFLOW.forEach((s,i)=>{const ic=s===q.status,ip=i<ci,sc=ST[s],dis=['REJECTED','EXPIRED'].includes(q.status);
+    fl+=`<button class="sf-btn" onclick="${dis?'':'chgStatus(\''+s+'\')'}" style="background:${ic?sc.c:ip?sc.c+'30':'var(--light)'};color:${ic?'#fff':ip?sc.c:'var(--muted)'};${dis?'cursor:default;opacity:.5':''}">${sc.l}</button>`;
+    if(i<SFLOW.length-1)fl+='<span class="sf-arrow">→</span>';});
+  document.getElementById('dFlow').innerHTML=fl;
+  ['details','notes','timeline'].forEach(t=>{document.getElementById('dt-'+t).classList.toggle('active',dTabCur===t);});
+  const body=document.getElementById('dBody');
+  if(dTabCur==='details'){const mc=q.margin>=15?'m-green':q.margin>=10?'m-amber':'m-red';
+    body.innerHTML=[['Product',q.product],['Premium',fmt(q.premium)],['Lives',q.lives.toLocaleString()],['Margin',`<span class="margin-val ${mc}">${q.margin}%</span>`],['Channel',q.channel],['Broker',q.broker],['Region',q.region],['Assignee',q.assignee],['Revisions',q.revisions],['Age',age+' days'],['Created',q.created],['Due',`<span style="color:${ov?'var(--error)':'inherit'};font-weight:${ov?600:400}">${q.dueDate}${ov?' (Overdue)':''}</span>`],['Updated',q.updated]].map(([l,v])=>`<div class="det-row"><span class="dl">${l}</span><span class="dv">${v}</span></div>`).join('');
+  }else if(dTabCur==='notes'){
+    body.innerHTML=q.notes.length?q.notes.map(n=>`<div class="note-card"><div class="nt">${n.text}</div><div class="nm"><span>${n.by}</span><span>${n.date}</span></div></div>`).join(''):'<div class="empty-st">No notes yet</div>';
+  }else{
+    let ev=[{d:q.created,t:'Quote Created',ds:`${q.product} for ${q.lives.toLocaleString()} lives`,c:'var(--navy)'},...q.notes.map(n=>({d:n.date,t:'Note Added',ds:n.text.slice(0,80),c:'var(--blue)'}))];
+    if(q.revisions>0)ev.push({d:q.updated,t:`Revision ${q.revisions}`,ds:'Quote updated',c:'var(--warn)'});
+    ev.push({d:q.updated,t:`Status: ${ST[q.status].l}`,ds:'Current status',c:ST[q.status].c});
+    ev.sort((a,b)=>a.d.localeCompare(b.d));
+    body.innerHTML='<div class="tl">'+ev.map(e=>`<div class="tl-item"><div class="tl-dot" style="background:${e.c};box-shadow:0 0 0 3px ${e.c}25"></div><div class="tl-date">${e.d}</div><div class="tl-title">${e.t}</div><div class="tl-desc">${e.ds}</div></div>`).join('')+'</div>';
+  }
+  const foot=document.getElementById('dFoot');
+  if(['APPROVED','REJECTED','EXPIRED'].includes(q.status)){foot.innerHTML=`<div style="flex:1;text-align:center;color:var(--muted);font-size:.78rem">This quote is ${st.l.toLowerCase()}</div>`;}
+  else{let opts=Object.entries(ST).filter(([k])=>k!==q.status).map(([k,v])=>`<option value="${k}">${v.i} ${v.l}</option>`).join('');
+    foot.innerHTML=`<select onchange="if(this.value)chgStatus(this.value)"><option value="">Move to...</option>${opts}</select><button class="dbtn dbtn-no" onclick="chgStatus('REJECTED')">Reject</button><button class="dbtn dbtn-ok" onclick="chgStatus('APPROVED')">Approve</button>`;}
+}
+function chgStatus(s){if(!selQuote)return;const i=quotes.findIndex(q=>q.id===selQuote.id);if(i>=0){quotes[i].status=s;quotes[i].updated=td();selQuote=quotes[i];renderDrawer();render();}}
+function dTab(t){dTabCur=t;renderDrawer();}
+
+// ─── MODAL ───
+function openNewQuote(){document.getElementById('modalOv').classList.add('open');}
+function closeNewQuote(){document.getElementById('modalOv').classList.remove('open');}
+function saveNewQuote(){
+  const cl=document.getElementById('nq-client').value.trim(),li=parseInt(document.getElementById('nq-lives').value),pr=parseFloat(document.getElementById('nq-premium').value);
+  if(!cl||!li||!pr){alert('Fill Client, Lives, and Premium');return;}
+  const d=td(),id='Q-2026-'+String(Math.floor(Math.random()*900)+100).padStart(3,'0');
+  quotes.unshift({id,client:cl,product:document.getElementById('nq-product').value,lives:li,premium:pr,margin:parseFloat(document.getElementById('nq-margin').value)||15,status:'DRAFT',priority:document.getElementById('nq-priority').value,channel:document.getElementById('nq-channel').value,assignee:'Prateek S.',created:d,updated:d,dueDate:document.getElementById('nq-due').value||d,broker:document.getElementById('nq-broker').value||'—',region:document.getElementById('nq-region').value||'Pune',notes:[],revisions:0});
+  ['nq-client','nq-lives','nq-premium','nq-margin','nq-broker'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('nq-due').value='';closeNewQuote();render();
+}
+
+// ─── NAV ───
+function switchView(v){curView=v;['board','list','dashboard','allocation'].forEach(x=>{document.getElementById('nav-'+x).classList.toggle('active',x===v);});render();}
+function setTab(t){curTab=t;['all','my','overdue'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('active',x===t);});render();}
+function setRole(r){curRole=r;document.getElementById('userRoleLabel').textContent=ROLES[r];}
+function onSearch(v){search=v;render();}
+function setSort(f){if(sortF===f)sortD=sortD==='asc'?'desc':'asc';else{sortF=f;sortD='asc';}render();}
+function toggleFilters(){document.getElementById('filterBar').classList.toggle('show');}
+
+function buildFilterMenus(){
+  buildMenu('status',Object.entries(ST).map(([k,v])=>({v:k,l:v.l})));
+  buildMenu('product',PRODS.map(p=>({v:p,l:p})));
+  buildMenu('priority',Object.entries(PR).map(([k,v])=>({v:k,l:v.l})));
+  buildMenu('channel',CHS.map(c=>({v:c,l:c})));
+  buildMenu('assignee',[...new Set(quotes.map(q=>q.assignee))].map(a=>({v:a,l:a})));
+}
+function buildMenu(key,opts){document.getElementById('menu-'+key).innerHTML=opts.map(o=>`<label><input type="checkbox" ${filters[key].includes(o.v)?'checked':''} onchange="togFV('${key}','${o.v}')"> ${o.l}</label>`).join('');}
+function toggleFD(k){['status','product','priority','channel','assignee'].forEach(x=>{if(x!==k)document.getElementById('menu-'+x).classList.remove('open');});document.getElementById('menu-'+k).classList.toggle('open');}
+function togFV(k,v){const i=filters[k].indexOf(v);if(i>=0)filters[k].splice(i,1);else filters[k].push(v);const btn=document.querySelector('#filter-'+k+' .fd-btn');btn.classList.toggle('sel',filters[k].length>0);const lbl=k[0].toUpperCase()+k.slice(1);btn.innerHTML=lbl+(filters[k].length?' ('+filters[k].length+')':'')+' ▾';render();}
+function clearFilters(){filters={status:[],product:[],priority:[],channel:[],assignee:[]};['status','product','priority','channel','assignee'].forEach(k=>{const b=document.querySelector('#filter-'+k+' .fd-btn');b.classList.remove('sel');b.innerHTML=k[0].toUpperCase()+k.slice(1)+' ▾';});buildFilterMenus();render();}
+document.addEventListener('click',e=>{if(!e.target.closest('.fd'))['status','product','priority','channel','assignee'].forEach(k=>{document.getElementById('menu-'+k).classList.remove('open');});});
+
+// ─── INIT ───
+buildFilterMenus();render();
+</script>
+</body>
+</html>

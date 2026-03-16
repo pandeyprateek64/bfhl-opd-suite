@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bajaj Health — OPD Quote Code Generator</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+:root{
+  --navy:#003087;--blue:#0057b8;--blue-mid:#1565c0;--light-blue:#e8f0fb;
+  --accent:#c8001e;--dark:#1a1a2e;--mid:#4a5568;--muted:#718096;
+  --light:#f4f7fc;--white:#fff;--border:#d1dce8;--border-light:#e8edf5;
+  --success:#047857;--error:#dc2626;--row-even:#f8fafd;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;font-size:14px}
+
+/* HEADER */
+.phdr{background:linear-gradient(135deg,var(--navy),var(--blue-mid));padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:66px;box-shadow:0 2px 20px rgba(0,48,135,.35);position:sticky;top:0;z-index:200}
+.phdr-l{display:flex;align-items:center;gap:14px}
+.logo-pill{background:#fff;border-radius:7px;padding:5px 10px;display:flex;align-items:center}
+.logo-pill img{height:34px}
+.phdr-ttl{color:#fff;font-size:1rem;font-weight:700;font-family:'EB Garamond',serif;border-left:1px solid rgba(255,255,255,.28);padding-left:14px;line-height:1.35}
+.phdr-ttl small{display:block;font-size:.68rem;font-family:'DM Sans',sans-serif;font-weight:400;opacity:.7}
+.hbadge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.9);padding:4px 12px;border-radius:20px;font-size:.67rem;letter-spacing:.08em;text-transform:uppercase}
+
+/* LAYOUT */
+.wrap{max-width:1060px;margin:0 auto;padding:24px 18px 60px}
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 24px rgba(0,48,135,.07);overflow:hidden;margin-bottom:16px}
+.chead{background:linear-gradient(90deg,var(--navy),var(--blue-mid));padding:13px 24px;display:flex;align-items:center;gap:9px}
+.chead-ico{width:28px;height:28px;background:rgba(255,255,255,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.chead h2{color:#fff;font-family:'EB Garamond',serif;font-size:1.05rem;font-weight:600}
+.chead p{color:rgba(255,255,255,.65);font-size:.7rem;margin-top:1px}
+.cbody{padding:22px 24px}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center;background:#fff;border-radius:12px;box-shadow:0 2px 16px rgba(0,48,135,.06);padding:14px 24px;margin-bottom:20px;overflow-x:auto;gap:0}
+.st{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.st-num{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--muted);transition:.2s;flex-shrink:0}
+.st-lbl{font-size:.72rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.st.done .st-num{background:var(--success);border-color:var(--success);color:#fff}
+.st.active .st-num{background:var(--navy);border-color:var(--navy);color:#fff}
+.st.active .st-lbl{color:var(--navy);font-weight:700}
+.st-conn{flex:1;min-width:20px;height:2px;background:var(--border);margin:0 6px}
+.st-conn.done{background:var(--success)}
+
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:4px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.sp2{grid-column:span 2}.sp3{grid-column:span 3}
+label.lbl{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.055em;color:var(--mid)}
+label.lbl .req{color:var(--accent)}
+.finput{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--dark);background:#fff;transition:.16s;outline:none;-webkit-appearance:none;appearance:none}
+.finput:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,87,184,.1)}
+.finput.err{border-color:var(--error)!important}
+select.finput{cursor:pointer}
+.sw-wrap{position:relative}.sw-wrap::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mid);pointer-events:none;font-size:.78rem}
+.fhint{font-size:.65rem;color:#94a3b8;margin-top:2px}
+.divider{border:none;border-top:1px solid var(--border-light);margin:18px 0}
+
+/* CHIPS */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.chip{padding:5px 14px;border-radius:20px;font-size:.73rem;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--mid);cursor:pointer;transition:.14s;user-select:none}
+.chip:hover{background:var(--light-blue);color:var(--blue);border-color:var(--blue)}
+.chip.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* BUTTONS */
+.btn-prim{background:linear-gradient(135deg,var(--navy),var(--blue-mid));color:#fff;border:none;padding:11px 32px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 3px 12px rgba(0,87,184,.27);transition:.16s;display:inline-flex;align-items:center;gap:7px}
+.btn-prim:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(0,87,184,.35)}
+.btn-sec{background:#fff;color:var(--blue);border:1.5px solid var(--blue);padding:11px 22px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:.16s;display:inline-flex;align-items:center;gap:6px}
+.btn-sec:hover{background:var(--light-blue)}
+.btn-ghost{background:#fff;color:var(--mid);border:1.5px solid var(--border);padding:11px 22px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;cursor:pointer;transition:.16s}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.btn-sm{padding:5px 12px;font-size:.72rem;border-radius:6px}
+.btn-danger{background:#fff;color:var(--error);border:1.5px solid #fecaca;padding:4px 10px;border-radius:5px;font-size:.7rem;font-family:'DM Sans',sans-serif;cursor:pointer;transition:.13s}
+.btn-danger:hover{background:#fef2f2}
+.form-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* INPUT MODE TABS */
+.imode-tabs{display:flex;background:var(--light);border:1.5px solid var(--border);border-radius:9px;overflow:hidden;max-width:400px;margin-bottom:16px}
+.imode-tab{flex:1;padding:9px 14px;text-align:center;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--mid);background:transparent;border:none;font-family:'DM Sans',sans-serif;transition:.15s;line-height:1.3}
+.imode-tab:hover{background:var(--light-blue);color:var(--blue)}
+.imode-tab.itsel{background:var(--navy);color:#fff;font-weight:700}
+
+/* PASTE AREA */
+.paste-area{width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--dark);resize:vertical;outline:none;transition:.16s}
+.paste-area:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,87,184,.1)}
+.paste-hint{font-size:.7rem;color:var(--muted);background:var(--light-blue);border:1px solid #bfdbfe;padding:8px 12px;border-radius:6px;margin-bottom:10px;display:flex;align-items:flex-start;gap:6px}
+
+/* COLUMN MAPPER */
+.mapper-preview{overflow-x:auto;border:1.5px solid var(--border);border-radius:9px;margin:12px 0}
+.mapper-tbl{width:100%;border-collapse:collapse;font-size:.76rem;min-width:400px}
+.mapper-tbl .map-hdr{background:var(--light-blue);padding:4px 8px;border-bottom:1px solid var(--border)}
+.mapper-tbl .map-hdr select{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:.7rem;font-family:'DM Sans',sans-serif;background:#fff;outline:none}
+.mapper-tbl td{padding:5px 8px;border-bottom:1px solid var(--border-light);vertical-align:middle;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.mapper-tbl tr:nth-child(even) td{background:var(--row-even)}
+.mapper-tbl .rn{color:var(--muted);font-size:.65rem;width:24px;text-align:center}
+.map-col-name{background:#eff6ff;font-weight:700;color:var(--blue)}
+
+/* BENEFIT TABLE */
+.ben-tbl-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:9px}
+.ben-tbl{width:100%;border-collapse:collapse;font-size:.78rem}
+.ben-tbl thead th{background:var(--navy);color:#fff;padding:7px 10px;font-size:.64rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600;text-align:left;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ben-tbl td{padding:5px 7px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.ben-tbl tr:hover td{background:#f8fafd}
+.ben-tbl input,.ben-tbl select{border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:.76rem;font-family:'DM Sans',sans-serif;width:100%;outline:none;transition:.12s}
+.ben-tbl input:focus,.ben-tbl select:focus{border-color:var(--blue)}
+.mode-pill-wrap{display:flex;gap:3px;flex-wrap:wrap}
+.mpill{padding:2px 8px;border-radius:4px;font-size:.61rem;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:.1s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.mpill.CL{background:#d1fae5;color:#065f46;border-color:#a7f3d0}
+.mpill.RI{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.mpill.VO{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
+.mpill.CLRI{background:#e0e7ff;color:#3730a3;border-color:#c7d2fe}
+.mpill.sel{transform:scale(1.08);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+/* RATE GRID */
+.rate-grid-wrap{border:1.5px solid var(--border);border-radius:9px;overflow:hidden}
+.rate-grid{width:100%;border-collapse:collapse;font-size:.8rem}
+.rate-grid thead th{background:var(--navy);color:#fff;padding:8px 14px;font-size:.65rem;text-transform:uppercase;letter-spacing:.04em}
+.rate-grid thead th:not(:first-child){text-align:right}
+.rate-grid tbody td{padding:7px 12px;border-bottom:1px solid var(--border-light)}
+.rate-grid tbody tr:last-child td{border-bottom:none}
+.rate-grid .fam-name{font-weight:600;color:var(--dark)}
+.rate-grid .fam-sub{font-size:.65rem;color:var(--muted)}
+.rate-input{border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Mono',monospace;font-size:.82rem;width:120px;text-align:right;outline:none;transition:.13s;float:right}
+.rate-input:focus{border-color:var(--blue)}
+
+/* PHC TOGGLE */
+.toggle-wrap{display:flex;background:var(--light);border:1.5px solid var(--border);border-radius:8px;overflow:hidden;max-width:240px}
+.toggle-opt{flex:1;padding:9px 14px;text-align:center;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--mid);background:transparent;border:none;font-family:'DM Sans',sans-serif;transition:.15s}
+.toggle-opt:hover{background:var(--light-blue);color:var(--blue)}
+.toggle-opt.tsel{background:var(--navy);color:#fff;font-weight:700}
+.toggle-section{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-light)}
+.toggle-section.show{display:block}
+
+/* OUTPUT ACTION BAR */
+.out-bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.btn-pdf{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.16s}
+.btn-pdf:hover{background:#a60017;transform:translateY(-1px)}
+.btn-word{background:#fff;color:#1565c0;border:1.5px solid #1565c0;padding:10px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:.16s;display:flex;align-items:center;gap:6px}
+.btn-word:hover{background:#e8f0fb}
+.btn-edit-q{background:#fff;color:var(--mid);border:1.5px solid var(--border);padding:10px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:.16s}
+.btn-edit-q:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ══════════════════════════════════════════
+   QUOTE DOCUMENT — WCP IDENTICAL STYLES
+   ══════════════════════════════════════════ */
+#quote-doc{background:#fff;border-radius:12px;box-shadow:0 2px 24px rgba(0,48,135,.08);overflow:hidden;font-size:12.5px}
+.qdh{background:var(--navy);padding:18px 30px;display:flex;align-items:center;justify-content:space-between;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qdh-logo{background:#fff;border-radius:6px;padding:5px 9px;display:inline-flex;align-items:center}
+.qdh-logo img{height:30px}
+.qdh-right{text-align:right}
+.qdh-title{color:#fff;font-size:1.1rem;font-weight:700;font-family:'EB Garamond',serif;letter-spacing:.02em}
+.qdh-sub{color:rgba(255,255,255,.6);font-size:.7rem;margin-top:2px}
+.qstrip{background:var(--light-blue);border-bottom:1px solid var(--border);padding:7px 30px;display:flex;justify-content:space-between;align-items:center;font-size:.72rem;color:var(--mid);flex-wrap:wrap;gap:6px}
+.qstrip strong{color:var(--blue);font-weight:700}
+.qdet{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--navy)}
+.qdet-col{padding:12px 28px}
+.qdet-col:first-child{border-right:1px solid var(--border-light)}
+.drow{display:flex;align-items:baseline;padding:3.5px 0;border-bottom:1px dotted var(--border-light);font-size:.78rem}
+.drow:last-child{border-bottom:none}
+.dlbl{color:var(--muted);min-width:175px;font-size:.72rem;flex-shrink:0}
+.dval{color:var(--dark);font-weight:600}
+.qsec{background:var(--navy);color:#fff;font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:6px 30px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qtable{width:100%;border-collapse:collapse;font-size:.77rem}
+.qtable thead tr th{background:#1a3a6b;color:#fff;padding:7px 13px;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qtable tbody tr td{padding:6px 13px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.qtable tbody tr:nth-child(even) td{background:var(--row-even)}
+.qtable .tsec td{background:#eef3fb!important;color:var(--blue);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;padding:5px 13px}
+.mb{display:inline-block;padding:1px 7px;border-radius:4px;font-size:.63rem;font-weight:700}
+.mb-cl{background:#d1fae5;color:#065f46}
+.mb-ri{background:#fef3c7;color:#92400e}
+.mb-bt{background:#e0e7ff;color:#3730a3}
+.mb-vo{background:#fce7f3;color:#9d174d}
+.qprem{padding:14px 28px 18px}
+.pbox{border:2px solid var(--navy);border-radius:10px;overflow:hidden}
+.pbox-head{background:var(--navy);color:#fff;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:6px 18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pbox .qtable thead tr th{background:#1a3a6b}
+.pbox .qtable tbody .total-row td{background:var(--navy)!important;color:#fff;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pbox .qtable tbody .total-row td:not(:first-child){color:#fcd34d;font-family:'EB Garamond',serif;font-size:.9rem}
+.pbox-note{font-size:.64rem;color:var(--muted);padding:5px 14px 8px;text-align:right}
+.qtnc{padding:0 30px 0}
+.tnc-full{padding:0 0 16px}
+.tnc2-section{margin-bottom:14px}
+.tnc2-head{background:#1a3a6b;color:white;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 10px;border-radius:4px;margin-bottom:8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.tnc2-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px}
+.tnc2-blk{font-size:.68rem;color:var(--dark)}
+.tnc2-blk h4{font-size:.7rem;font-weight:700;color:var(--navy);margin-bottom:3px}
+.tnc2-blk p{line-height:1.5;color:var(--mid);margin-bottom:3px}
+.tnc2-blk strong{color:var(--dark)}
+.tnc2-excl{font-size:.67rem;color:var(--mid);line-height:1.65;padding:6px 8px;background:#f8fafd;border-radius:5px;border-left:3px solid var(--navy)}
+.tnc2-list{padding-left:14px}
+.tnc2-list li{font-size:.68rem;color:var(--mid);line-height:1.55;margin-bottom:2px}
+.phc-section{border-top:2px solid var(--navy)}
+.phc-head{background:var(--navy);color:white;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:6px 13px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.phc-table{width:100%;border-collapse:collapse;font-size:.71rem}
+.phc-table th{background:#1a3a6b;color:white;padding:6px 10px;text-align:left;font-weight:600;font-size:.67rem;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.phc-table td{padding:5px 10px;border-bottom:1px solid var(--border-light);vertical-align:top}
+.phc-table tr:nth-child(even) td{background:#f8fafd}
+.phc-cat{font-weight:700;color:var(--navy);font-size:.69rem}
+.qfoot{background:var(--navy);color:rgba(255,255,255,.6);font-size:.63rem;text-align:center;padding:8px 18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* PRINT */
+@media print{
+  body{background:#fff}
+  .phdr,.wrap>*:not(#output-section){display:none!important}
+  #output-section,#quote-doc{display:block!important}
+  .out-bar{display:none!important}
+  #quote-doc{box-shadow:none;border-radius:0}
+  .qdh,.qsec,.qtable thead tr th,.pbox-head,.phc-head,.total-row,.qfoot{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{margin:8mm;size:A4}
+}
+@media(max-width:700px){
+  .fgrid{grid-template-columns:1fr 1fr}
+  .qdet{grid-template-columns:1fr}
+  .tnc2-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef, useCallback, useEffect } = React;
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const LOGO = 'data:image/png;base64,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';
+
+const MODE_META = {
+  CL:{ label:'Cashless', cls:'mb-cl' },
+  RI:{ label:'Reimbursement', cls:'mb-ri' },
+  VO:{ label:'Voucher', cls:'mb-vo' },
+  CLRI:{ label:'Cashless + RI', cls:'mb-bt' }
+};
+
+const FAM_OPTS = [
+  { key:'E',     full:'Employee Only' },
+  { key:'ES',    full:'Employee + Spouse' },
+  { key:'ESC',   full:'Employee + Spouse + Children' },
+  { key:'ESCP',  full:'Employee + Spouse + Children + Parents' },
+  { key:'ESCAP', full:'Employee + Spouse + Children + All Parents (incl. PIL)' },
+];
+
+const PROD_TYPES = ['Open Wallet','Fungible Wallet','Additive Wallet','WCP 2.0 — Fungible','WCP 2.0 — Additive','Custom'];
+const PLAN_VARIANTS = ['Basic','Bronze','Silver','Gold','Platinum','Platinum Plus'];
+
+const PHC_DATA = {
+  classic:{
+    label:'Classic Package (₹2,500)',
+    rows:[
+      ['Hemogram','Complete Hemogram (25 parameters) — CBC, MCHC, RDW, Haematocrit, Platelet Count, Total Leucocytes'],
+      ['ESR','Erythrocyte Sedimentation Rate'],
+      ['Liver Function Test','Albumin, Bilirubin (Total/Direct/Indirect), Globulin, GGTP, Alkaline Phosphatase, SGOT/AST, SGPT/ALT, A/G Ratio, Serum Proteins'],
+      ['Urine Routine','Colour, Leucocytes, Epithelial Cells, Crystals, Ketone, Urobilinogen, Glucose, Protein, Blood'],
+      ['Diabetic Profile','Fasting Blood Sugar (FBS) + HbA1C'],
+      ['Lipid Profile','Total Cholesterol, Triglycerides, HDL/LDL/VLDL, Non-HDL, LDL:HDL &amp; CHOL:HDL Ratios'],
+      ['Kidney Function','Blood Urea Nitrogen (BUN) + Creatinine Serum'],
+      ['Thyroid Profile','T3 (Total), T4 (Total), TSH (Ultra-sensitive)'],
+      ['Bone Health','Calcium'],
+    ]
+  },
+  silver:{
+    label:'Silver Package (₹3,500)',
+    rows:[
+      ['Hemogram','Complete Hemogram (25 parameters) + ESR'],
+      ['Diabetic Profile','FBS + HbA1C'],
+      ['Lipid Profile','Total Cholesterol, Triglycerides, HDL/LDL/VLDL, Non-HDL, Ratio pairs'],
+      ['Liver Function Test','Bilirubin Total/Direct/Indirect, Albumin, Globulin, SGOT, SGPT, Alkaline Phosphatase, GGT, Total Protein'],
+      ['Kidney Function Test','Calcium, Uric Acid, Creatinine, BUN, BUN:Creatinine Ratio'],
+      ['Thyroid Profile','TSH, T3, T4'],
+      ['Urine Analysis','Crystals, Leucocytes, Urobilinogen, Colour, Epithelial Cells, Protein, Ketone, Blood, Glucose'],
+      ['Vitamin B12','Cyanocobalamin'],
+      ['Vitamin D','Vitamin D Total — 25 Hydroxy'],
+      ['Iron Deficiency','TIBC, % Transferrin Saturation, Iron'],
+      ['Stool Examination','Routine &amp; Microscopy — full panel'],
+      ['Inflammation Marker','Hs CRP'],
+    ]
+  },
+  gold:{
+    label:'Gold Package (₹6,000)',
+    rows:[
+      ['Hemogram','Complete Hemogram (25 parameters) + ESR'],
+      ['Diabetic Profile','FBS + HbA1C'],
+      ['Lipid Profile','Total Cholesterol, Triglycerides, HDL/LDL/VLDL, Non-HDL, Ratio pairs'],
+      ['Liver Function Test','Bilirubin T/D/I, Albumin, Globulin, SGOT, SGPT, ALP, GGT, Protein'],
+      ['Kidney Function','Calcium, Uric Acid, Creatinine, BUN, Ratio'],
+      ['Thyroid Profile','TSH, T3, T4'],
+      ['Urine Analysis','Full panel (9 parameters)'],
+      ['Vitamin B12','Cyanocobalamin'],
+      ['Vitamin D','25 Hydroxy'],
+      ['Iron Deficiency','TIBC, Transferrin, Iron'],
+      ['Stool Examination','Routine &amp; Microscopy'],
+      ['Inflammation Marker','Hs CRP'],
+      ['Imaging &amp; ECG','USG Whole Abdomen + ECG + Chest X-Ray'],
+      ['Gender Specific (F)','Pap Smear (Female only)'],
+    ]
+  },
+  essential:{
+    label:'Essential Package — 4 Test Groups',
+    rows:[
+      ['CBC (22 Parameters)','Haemoglobin, WBC, Platelet, RBC, MCH, MCHC, MCV, RDW, Differential count'],
+      ['Diabetic Profile','Fasting Blood Sugar'],
+      ['Lipid Profile','Serum Cholesterol (Total)'],
+      ['Kidney Function','Serum Creatinine'],
+    ]
+  },
+  phc82:{
+    label:'PHC 82 Tests',
+    rows:[
+      ['Haemogram + ESR (27 Parameters)','Complete CBC with differential + ESR Automated'],
+      ['KFT (11 Parameters)','Blood Urea, BUN, Creatinine, Calcium, Chloride, Phosphorus, Potassium, Sodium, Uric Acid'],
+      ['Lipid Profile (9 Parameters)','Total Cholesterol, CHOL/HDL, HDL, HDL/LDL, LDL Calculated, LDL/HDL, Non-HDL, Triglycerides, VLDL'],
+      ['LFT (12 Parameters)','A/G Ratio, Albumin, ALP, Bilirubin Total/Direct/Indirect, GGTP, Globulin, Proteins, SGOT, Ratio, SGPT'],
+      ['Urine Routine &amp; Microscopy (23 Parameters)','Full urine analysis including physical, chemical and microscopic examination'],
+    ]
+  },
+  custom:{
+    label:'Custom Package',
+    rows:[]
+  }
+};
+
+// ─── Utilities ───────────────────────────────────────────
+let _uid = 1;
+const uid = () => _uid++;
+const fmt = v => v ? '₹' + Number(v).toLocaleString('en-IN') : '—';
+const fmtGST = v => v ? '₹' + Math.round(Number(v) * 0.18).toLocaleString('en-IN') : '—';
+const fmtGross = v => v ? '₹' + Math.round(Number(v) * 1.18).toLocaleString('en-IN') : '—';
+const esc = s => (s||'').replace(/&(?!amp;|lt;|gt;)/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function normalizeMode(raw) {
+  if (!raw) return 'CL';
+  const s = raw.toString().trim().toLowerCase().replace(/\s+/g,'');
+  if ((s.includes('cash') && s.includes('reim')) || s==='cl+ri' || s==='clri' || s==='both') return 'CLRI';
+  if (s.includes('reim') || s==='ri') return 'RI';
+  if (s.includes('vouch') || s==='vo' || s==='voucher') return 'VO';
+  if (s.includes('cash') || s==='cl' || s==='cashless') return 'CL';
+  return 'CL';
+}
+
+function parsePasteData(text) {
+  if (!text.trim()) return [];
+  return text.trim().split('\n').map(r => r.split('\t').map(c => c.trim())).filter(r => r.some(c => c));
+}
+
+// ─── STEP 1: Client Info ──────────────────────────────────
+function StepClient({ S, upd }) {
+  const c = S.client;
+  const updC = p => upd({ client: { ...c, ...p } });
+
+  const today = new Date().toISOString().split('T')[0];
+  const thirtyDays = new Date(Date.now() + 30*86400000).toISOString().split('T')[0];
+
+  useEffect(() => {
+    if (!c.date) updC({ date: today, expiry: thirtyDays });
+  }, []);
+
+  const qref = c.cid ? 'QCG-' + c.cid.replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,8) :
+    'QCG-' + Date.now().toString(36).toUpperCase().slice(-6);
+
+  return (
+    <div className="card">
+      <div className="chead"><div className="chead-ico">👤</div>
+        <div><h2>Client &amp; Quote Details</h2><p>Company information, quote reference and coverage configuration</p></div>
+      </div>
+      <div className="cbody">
+        <div className="fgrid">
+          <div className="fg sp2">
+            <label className="lbl">Company / Insured Name <span className="req">*</span></label>
+            <input className="finput" value={c.co} onChange={e=>updC({co:e.target.value})} placeholder="e.g. Infosys Limited"/>
+          </div>
+          <div className="fg">
+            <label className="lbl">Client Code / Quote ID</label>
+            <input className="finput" value={c.cid} onChange={e=>updC({cid:e.target.value})} placeholder="e.g. INF-2025-001"/>
+            <span className="fhint">Auto-generates Quote Ref: {qref}</span>
+          </div>
+          <div className="fg">
+            <label className="lbl">Total Employees</label>
+            <input className="finput" type="number" min="1" value={c.emp} onChange={e=>updC({emp:e.target.value})} placeholder="500"/>
+          </div>
+          <div className="fg">
+            <label className="lbl">Participation Type</label>
+            <div className="sw-wrap">
+              <select className="finput" value={c.partType} onChange={e=>updC({partType:e.target.value})}>
+                <option>Compulsory</option><option>Voluntary</option>
+              </select>
+            </div>
+          </div>
+          <div className="fg">
+            <label className="lbl">Quote Type</label>
+            <div className="sw-wrap">
+              <select className="finput" value={c.quoteType} onChange={e=>updC({quoteType:e.target.value})}>
+                <option>Fresh</option><option>Renewal</option><option>Portability</option>
+              </select>
+            </div>
+          </div>
+          <div className="fg">
+            <label className="lbl">Date of Quote</label>
+            <input className="finput" type="date" value={c.date} onChange={e=>{
+              const d2=new Date(e.target.value+'T00:00:00');
+              d2.setDate(d2.getDate()+30);
+              updC({date:e.target.value, expiry:d2.toISOString().split('T')[0]});
+            }}/>
+          </div>
+          <div className="fg">
+            <label className="lbl">Expiry of Quote</label>
+            <input className="finput" type="date" value={c.expiry} onChange={e=>updC({expiry:e.target.value})}/>
+          </div>
+        </div>
+        <div className="divider"/>
+        <div className="fg">
+          <label className="lbl" style={{marginBottom:8}}>Family Construct <span className="req">*</span></label>
+          <div className="chips">
+            {FAM_OPTS.map(f=>(
+              <div key={f.key} className={'chip '+(c.families.includes(f.key)?'sel':'')}
+                onClick={()=>{
+                  const cur=c.families;
+                  updC({families: cur.includes(f.key) ? cur.filter(x=>x!==f.key) : [...cur,f.key]});
+                }}>
+                {f.key} <span style={{fontWeight:400,fontSize:'.6rem',opacity:.75}}>({f.full})</span>
+              </div>
+            ))}
+          </div>
+          <span className="fhint" style={{marginTop:6}}>All selected constructs will appear in the pricing table</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── STEP 2: Product Config ───────────────────────────────
+function StepProduct({ S, upd }) {
+  const p = S.product;
+  const updP = patch => upd({ product: { ...p, ...patch } });
+
+  return (
+    <div className="card">
+      <div className="chead"><div className="chead-ico">⚙️</div>
+        <div><h2>Product Structure</h2><p>OPD product type, wallet SI and plan variant configuration</p></div>
+      </div>
+      <div className="cbody">
+        <div className="fgrid">
+          <div className="fg sp2">
+            <label className="lbl">Product Type <span className="req">*</span></label>
+            <div className="sw-wrap">
+              <select className="finput" value={p.type} onChange={e=>updP({type:e.target.value})}>
+                {PROD_TYPES.map(t=><option key={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="fg">
+            <label className="lbl">Plan Variant</label>
+            <div className="sw-wrap">
+              <select className="finput" value={p.plan} onChange={e=>updP({plan:e.target.value})}>
+                {PLAN_VARIANTS.map(v=><option key={v}>{v}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="fg sp2">
+            <label className="lbl">OPD Wallet Sum Insured <span className="req">*</span></label>
+            <input className="finput" value={p.walletSI} onChange={e=>updP({walletSI:e.target.value})} placeholder="e.g. 10000"/>
+            <span className="fhint">Enter numeric value only (e.g. 10000 for ₹10,000)</span>
+          </div>
+          <div className="fg">
+            <label className="lbl">Wellness Wallet Add-on?</label>
+            <div className="toggle-wrap" style={{maxWidth:200}}>
+              <button className={'toggle-opt '+(p.hasWellness?'':'tsel')} onClick={()=>updP({hasWellness:false})}>No</button>
+              <button className={'toggle-opt '+(p.hasWellness?'tsel':'')} onClick={()=>updP({hasWellness:true})}>Yes — Add On</button>
+            </div>
+          </div>
+          {p.hasWellness && (
+            <div className="fg">
+              <label className="lbl">Wellness Wallet SI</label>
+              <input className="finput" value={p.wellnessSI} onChange={e=>updP({wellnessSI:e.target.value})} placeholder="e.g. 2000"/>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── STEP 3: Benefits — Column Mapper ─────────────────────
+function StepBenefits({ S, upd }) {
+  const [mode, setMode] = useState(S.inputMode || 'paste');
+  const [pasteText, setPasteText] = useState('');
+  const [rows, setRows] = useState([]); // 2D array after parse
+  const [colMap, setColMap] = useState({ name:-1, mode:-1, sublimit:-1, remarks:-1 });
+  const [mapDone, setMapDone] = useState(false);
+  const fileRef = useRef();
+
+  // Sync back to parent
+  const updBens = bens => upd({ benefits: bens });
+
+  // ─ Parse paste
+  function handleParse() {
+    const parsed = parsePasteData(pasteText);
+    if (!parsed.length) return;
+    // Auto-detect header row (if first row has no numbers)
+    const firstRowLooksLikeHeader = parsed[0].every(c => isNaN(parseFloat(c)));
+    setRows(parsed);
+    // Try auto-map based on header text
+    if (firstRowLooksLikeHeader) {
+      const hdr = parsed[0].map(h => h.toLowerCase());
+      const autoMap = { name:-1, mode:-1, sublimit:-1, remarks:-1 };
+      hdr.forEach((h,i) => {
+        if (/benefit|name|cover|description/i.test(h)) autoMap.name = i;
+        else if (/mode|utilis|channel/i.test(h)) autoMap.mode = i;
+        else if (/sub.?limit|amount|value|coverage|limit|si\b/i.test(h)) autoMap.sublimit = i;
+        else if (/remark|note|comment|desc/i.test(h)) autoMap.remarks = i;
+      });
+      setColMap(autoMap);
+    }
+    setMapDone(false);
+  }
+
+  // ─ File upload via SheetJS
+  function handleFile(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type:'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { header:1 });
+        setRows(data.filter(r => r.some(c => c !== undefined && c !== '')).map(r => r.map(c => c===undefined?'':String(c).trim())));
+        setMapDone(false);
+        setColMap({ name:-1, mode:-1, sublimit:-1, remarks:-1 });
+      } catch(err) { alert('Could not read file. Please try Excel paste instead.'); }
+    };
+    reader.readAsBinaryString(f);
+  }
+
+  // ─ Apply mapping → create benefit rows
+  function applyMapping() {
+    const dataRows = rows.filter((r,i) => {
+      if (i === 0 && r.every(c => isNaN(parseFloat(c)))) return false; // skip header
+      return r.some(c => c);
+    });
+    const newBens = dataRows.map(r => ({
+      id: uid(),
+      name: colMap.name >= 0 ? (r[colMap.name] || '') : '',
+      mode: colMap.mode >= 0 ? normalizeMode(r[colMap.mode]) : 'CL',
+      sublimit: colMap.sublimit >= 0 ? (r[colMap.sublimit] || '') : '',
+      remarks: colMap.remarks >= 0 ? (r[colMap.remarks] || '') : '',
+    })).filter(b => b.name);
+    updBens(newBens);
+    setMapDone(true);
+  }
+
+  // ─ Manual add row
+  function addRow() {
+    updBens([...(S.benefits||[]), { id:uid(), name:'', mode:'CL', sublimit:'', remarks:'' }]);
+  }
+
+  function delRow(id) { updBens(S.benefits.filter(b=>b.id!==id)); }
+  function updRow(id, patch) { updBens(S.benefits.map(b=>b.id===id?{...b,...patch}:b)); }
+
+  const previewRows = rows.slice(0, 6);
+  const colCount = rows[0] ? rows[0].length : 0;
+  const FIELD_OPTS = ['skip','Benefit Name','Mode','Sublimit / Coverage','Remarks'];
+  const fieldToKey = { 'Benefit Name':'name', 'Mode':'mode', 'Sublimit / Coverage':'sublimit', 'Remarks':'remarks' };
+
+  return (
+    <div className="card">
+      <div className="chead"><div className="chead-ico">📊</div>
+        <div><h2>Benefits Configuration</h2><p>Add benefit rows via paste from Excel, file upload, or manual entry</p></div>
+      </div>
+      <div className="cbody">
+        {/* Mode selector */}
+        <div className="imode-tabs">
+          {['paste','upload','manual'].map(m=>(
+            <button key={m} className={'imode-tab '+(mode===m?'itsel':'')} onClick={()=>{setMode(m);upd({inputMode:m});}}>
+              {m==='paste'?'📋 Paste from Excel':m==='upload'?'📁 Upload File':'✏️ Manual Entry'}
+            </button>
+          ))}
+        </div>
+
+        {/* PASTE MODE */}
+        {mode === 'paste' && (
+          <div>
+            <div className="paste-hint">
+              💡 Copy your benefit table directly from Excel (Ctrl+C on selected cells) and paste below. The tool will detect columns — you then confirm which column is which.
+            </div>
+            <div className="fg" style={{marginBottom:10}}>
+              <label className="lbl">Paste Excel Data Here</label>
+              <textarea className="paste-area" value={pasteText}
+                onChange={e=>{setPasteText(e.target.value);setRows([]);setMapDone(false);}}
+                placeholder={"Benefit Name\tMode\tSublimit\nDoctor Consultation\tCashless\tFull Wallet\nPrescribed Pharmacy\tCashless\tFull Wallet\nDental\tReimbursement\t₹5,000..."}
+              />
+              <span className="fhint">{pasteText ? `${parsePasteData(pasteText).length} rows detected` : 'Supports tab-separated data from Excel'}</span>
+            </div>
+            <button className="btn-sec btn-sm" onClick={handleParse} disabled={!pasteText.trim()}>
+              🔍 Parse &amp; Map Columns
+            </button>
+          </div>
+        )}
+
+        {/* UPLOAD MODE */}
+        {mode === 'upload' && (
+          <div>
+            <div className="paste-hint">
+              📁 Upload an Excel file (.xlsx, .xls, .csv). First sheet will be used. Columns will be mapped in the next step.
+            </div>
+            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{display:'none'}} onChange={handleFile}/>
+            <button className="btn-sec" onClick={()=>fileRef.current.click()}>📂 Choose File</button>
+            {rows.length > 0 && <span style={{marginLeft:10,fontSize:'.75rem',color:'var(--success)'}}>✓ {rows.length} rows loaded</span>}
+          </div>
+        )}
+
+        {/* COLUMN MAPPER — shown after paste or upload */}
+        {(mode === 'paste' || mode === 'upload') && rows.length > 0 && !mapDone && (
+          <div style={{marginTop:16}}>
+            <div style={{fontSize:'.78rem',fontWeight:700,color:'var(--navy)',marginBottom:8}}>
+              Step 2 — Assign Columns &nbsp;<span style={{fontWeight:400,color:'var(--muted)'}}>Tell the tool what each column contains</span>
+            </div>
+            <div className="mapper-preview">
+              <table className="mapper-tbl">
+                <thead>
+                  <tr>
+                    <th className="map-hdr rn">#</th>
+                    {Array.from({length:colCount},(_,i)=>(
+                      <th key={i} className="map-hdr">
+                        <select value={
+                          Object.entries(colMap).find(([k,v])=>v===i)?.[0]
+                            ? FIELD_OPTS.find(f=>fieldToKey[f]===Object.entries(colMap).find(([k,v])=>v===i)?.[0]) || 'skip'
+                            : 'skip'
+                        } onChange={e=>{
+                          const chosen = e.target.value;
+                          const key = fieldToKey[chosen];
+                          // clear old assignment for this column
+                          const fresh = { ...colMap };
+                          Object.keys(fresh).forEach(k=>{ if(fresh[k]===i) fresh[k]=-1; });
+                          if (key) fresh[key] = i;
+                          setColMap(fresh);
+                        }}>
+                          {FIELD_OPTS.map(f=><option key={f} value={f}>{f==='skip'?'— Skip —':f}</option>)}
+                        </select>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {previewRows.map((r,ri)=>(
+                    <tr key={ri}>
+                      <td className="rn" style={{color:'var(--muted)'}}>{ri+1}</td>
+                      {Array.from({length:colCount},(_,ci)=>(
+                        <td key={ci} className={
+                          Object.values(colMap).includes(ci) ? 'map-col-name' : ''
+                        }>{r[ci]||''}</td>
+                      ))}
+                    </tr>
+                  ))}
+                  {rows.length > 6 && <tr><td colSpan={colCount+1} style={{textAlign:'center',color:'var(--muted)',fontSize:'.68rem',padding:'4px 8px'}}>…{rows.length-6} more rows</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <div style={{display:'flex',gap:10,alignItems:'center',marginTop:10}}>
+              <button className="btn-prim btn-sm" onClick={applyMapping} disabled={colMap.name<0}>
+                ✓ Apply Mapping &amp; Import {rows.length} Rows
+              </button>
+              {colMap.name<0 && <span style={{fontSize:'.7rem',color:'var(--error)'}}>Please assign at least the "Benefit Name" column</span>}
+            </div>
+          </div>
+        )}
+
+        {mapDone && (
+          <div style={{background:'#d1fae5',border:'1px solid #6ee7b7',padding:'7px 12px',borderRadius:7,fontSize:'.76rem',color:'var(--success)',margin:'10px 0',display:'flex',alignItems:'center',gap:7}}>
+            ✓ {S.benefits.length} benefit rows imported. You can edit them below or add more manually.
+            <button className="btn-ghost btn-sm" style={{marginLeft:'auto'}} onClick={()=>{setMapDone(false);setRows([]);}}>Re-import</button>
+          </div>
+        )}
+
+        {/* BENEFIT TABLE — always shown */}
+        <div style={{marginTop:16}}>
+          {S.benefits.length > 0 && (
+            <div className="ben-tbl-wrap" style={{marginBottom:10}}>
+              <table className="ben-tbl">
+                <thead>
+                  <tr>
+                    <th style={{width:32}}>#</th>
+                    <th style={{minWidth:200}}>Benefit Name</th>
+                    <th style={{width:180}}>Utilisation Mode</th>
+                    <th style={{minWidth:140}}>Coverage / Sublimit</th>
+                    <th style={{minWidth:120}}>Remarks</th>
+                    <th style={{width:32}}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {S.benefits.map((b,i)=>(
+                    <tr key={b.id}>
+                      <td style={{textAlign:'center',color:'var(--muted)',fontSize:'.65rem'}}>{i+1}</td>
+                      <td><input value={b.name} onChange={e=>updRow(b.id,{name:e.target.value})} placeholder="Benefit name"/></td>
+                      <td>
+                        <div className="mode-pill-wrap">
+                          {Object.keys(MODE_META).map(m=>(
+                            <span key={m} className={`mpill ${m}${b.mode===m?' sel':''}`}
+                              onClick={()=>updRow(b.id,{mode:m})}>
+                              {MODE_META[m].label}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td><input value={b.sublimit} onChange={e=>updRow(b.id,{sublimit:e.target.value})} placeholder="Full Wallet / ₹5,000…"/></td>
+                      <td><input value={b.remarks} onChange={e=>updRow(b.id,{remarks:e.target.value})} placeholder="Optional"/></td>
+                      <td><button className="btn-danger" onClick={()=>delRow(b.id)}>✕</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+            <button className="btn-prim btn-sm" onClick={addRow}>＋ Add Row</button>
+            {S.benefits.length > 0 && (
+              <span style={{fontSize:'.72rem',color:'var(--muted)'}}>{S.benefits.length} row{S.benefits.length!==1?'s':''} configured</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── STEP 4: Rates ────────────────────────────────────────
+function StepRates({ S, upd }) {
+  const selFams = (S.client.families || ['E']);
+  const rates = S.rates || {};
+  const updRate = (fam, val) => upd({ rates: { ...rates, [fam]: val } });
+  const emp = Number(S.client.emp) || 0;
+
+  return (
+    <div className="card">
+      <div className="chead"><div className="chead-ico">💰</div>
+        <div><h2>Premium Rates — Per Employee Per Annum</h2><p>Enter base rates (Ex-GST) for each family configuration selected</p></div>
+      </div>
+      <div className="cbody">
+        {selFams.length === 0 ? (
+          <div style={{color:'var(--muted)',fontSize:'.8rem',padding:'12px 0'}}>Please select family configurations in Step 1 first.</div>
+        ) : (
+          <>
+          <div className="rate-grid-wrap">
+            <table className="rate-grid">
+              <thead>
+                <tr>
+                  <th style={{width:'40%'}}>Family Configuration</th>
+                  <th>Per Employee Rate (₹, Ex-GST)</th>
+                  <th style={{textAlign:'right'}}>GST @18%</th>
+                  <th style={{textAlign:'right'}}>Gross PEPA</th>
+                  {emp > 0 && <th style={{textAlign:'right'}}>Total Ex-GST</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {selFams.map(fam => {
+                  const fo = FAM_OPTS.find(f=>f.key===fam);
+                  const v = rates[fam] || '';
+                  const num = parseFloat(v) || 0;
+                  return (
+                    <tr key={fam}>
+                      <td>
+                        <div className="fam-name">{fam}</div>
+                        <div className="fam-sub">{fo?.full||fam}</div>
+                      </td>
+                      <td>
+                        <input className="rate-input" type="number" min="0" value={v}
+                          onChange={e=>updRate(fam,e.target.value)} placeholder="₹"/>
+                      </td>
+                      <td style={{textAlign:'right',fontFamily:'DM Mono,monospace',fontSize:'.76rem',color:'var(--muted)'}}>
+                        {num ? fmtGST(num) : '—'}
+                      </td>
+                      <td style={{textAlign:'right',fontFamily:'DM Mono,monospace',fontSize:'.8rem',fontWeight:700,color:'var(--navy)'}}>
+                        {num ? fmtGross(num) : '—'}
+                      </td>
+                      {emp > 0 && (
+                        <td style={{textAlign:'right',fontFamily:'DM Mono,monospace',fontSize:'.76rem',color:'var(--mid)'}}>
+                          {num ? fmt(Math.round(num * emp)) : '—'}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="fhint" style={{marginTop:8}}>All rates are Per Employee Per Annum (PEPA), exclusive of GST. GST @18% auto-calculated.</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── STEP 5: Options (PHC + T&C) ─────────────────────────
+function StepOptions({ S, upd }) {
+  const phc = S.phc || { enabled:false, pkg:'classic', customTests:'' };
+  const updPHC = p => upd({ phc: { ...phc, ...p } });
+
+  return (
+    <div>
+      {/* PHC */}
+      <div className="card">
+        <div className="chead"><div className="chead-ico">🏥</div>
+          <div><h2>Preventive Health Checkup (PHC)</h2><p>Optionally include a PHC package in the quote output</p></div>
+        </div>
+        <div className="cbody">
+          <div className="fg">
+            <label className="lbl">Include PHC Section?</label>
+            <div className="toggle-wrap">
+              <button className={'toggle-opt '+(phc.enabled?'':'tsel')} onClick={()=>updPHC({enabled:false})}>✗ No PHC</button>
+              <button className={'toggle-opt '+(phc.enabled?'tsel':'')} onClick={()=>updPHC({enabled:true})}>✓ Include PHC</button>
+            </div>
+          </div>
+          <div className={'toggle-section '+(phc.enabled?'show':'')}>
+            <div className="fgrid">
+              <div className="fg">
+                <label className="lbl">PHC Package</label>
+                <div className="sw-wrap">
+                  <select className="finput" value={phc.pkg} onChange={e=>updPHC({pkg:e.target.value})}>
+                    <option value="essential">Essential (4 Test Groups)</option>
+                    <option value="classic">Classic Package (₹2,500)</option>
+                    <option value="silver">Silver Package (₹3,500)</option>
+                    <option value="gold">Gold Package (₹6,000)</option>
+                    <option value="phc82">PHC 82 Tests</option>
+                    <option value="custom">Custom / Paste Tests</option>
+                  </select>
+                </div>
+              </div>
+              <div className="fg">
+                <label className="lbl">Utilisation Mode</label>
+                <div className="sw-wrap">
+                  <select className="finput" value={phc.mode||'CL'} onChange={e=>updPHC({mode:e.target.value})}>
+                    <option value="CL">Cashless</option>
+                    <option value="VO">Voucher</option>
+                    <option value="RI">Reimbursement</option>
+                  </select>
+                </div>
+              </div>
+              <div className="fg">
+                <label className="lbl">Wallet Deductible?</label>
+                <div className="sw-wrap">
+                  <select className="finput" value={phc.walletDed||'yes'} onChange={e=>updPHC({walletDed:e.target.value})}>
+                    <option value="yes">Yes — Deducted from Wallet SI</option>
+                    <option value="no">No — Additive / Separate</option>
+                  </select>
+                </div>
+              </div>
+              {phc.pkg === 'custom' && (
+                <div className="fg sp3">
+                  <label className="lbl">Custom Test List</label>
+                  <textarea className="finput" rows={4} style={{resize:'vertical'}}
+                    value={phc.customTests||''}
+                    onChange={e=>updPHC({customTests:e.target.value})}
+                    placeholder="Paste or type the list of tests to be included in the PHC package..."/>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* T&C Toggle */}
+      <div className="card">
+        <div className="chead"><div className="chead-ico">📋</div>
+          <div><h2>Endorsement Terms</h2><p>Select the endorsement premium charging clause for T&amp;C Section C.2</p></div>
+        </div>
+        <div className="cbody">
+          <div className="fg">
+            <label className="lbl">Addition Premium Terms</label>
+            <div className="chips">
+              <div className={'chip '+(S.endorsement==='full'?'sel':'')} onClick={()=>upd({endorsement:'full'})}>
+                Full Premium for Additions
+              </div>
+              <div className={'chip '+(S.endorsement==='prorata'?'sel':'')} onClick={()=>upd({endorsement:'prorata'})}>
+                Pro-Rata Premium for Additions
+              </div>
+            </div>
+            <div style={{marginTop:10,padding:'8px 12px',background:'var(--light-blue)',borderRadius:6,fontSize:'.73rem',color:'var(--blue)',border:'1px solid #bfdbfe'}}>
+              {S.endorsement==='full'
+                ? '→ Will insert: "Premium charged in full — no pro-rating. Effective from date of addition, not policy inception."'
+                : '→ Will insert: "Premium charged on pro-rata basis from date of addition to policy expiry. Effective from intimation date."'}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── QUOTE HTML BUILDER ───────────────────────────────────
+function buildQuoteHTML(S) {
+  const c = S.client;
+  const p = S.product;
+  const bens = S.benefits || [];
+  const rates = S.rates || {};
+  const phc = S.phc || {};
+  const fams = c.families || [];
+
+  const fmtDate = d => {
+    if (!d) return '—';
+    try { return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+    catch(e){ return d; }
+  };
+
+  const qref = c.cid ? 'QCG-'+c.cid.replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,8)+'-'+new Date().getFullYear()
+                     : 'QCG-'+Date.now().toString(36).toUpperCase().slice(-6);
+
+  const mb = m => {
+    const meta = MODE_META[m] || MODE_META.CL;
+    return `<span class="mb ${meta.cls}">${meta.label}</span>`;
+  };
+
+  // Benefits rows
+  const benRows = bens.map(b => `
+    <tr>
+      <td>${esc(b.name)}</td>
+      <td>${mb(b.mode)}</td>
+      <td>${esc(b.sublimit)||'As per Wallet SI'}</td>
+      ${b.remarks ? `<td style="font-size:.7rem;color:var(--muted)">${esc(b.remarks)}</td>` : ''}
+    </tr>`).join('');
+
+  const hasBens = bens.length > 0;
+  const hasRemarks = bens.some(b=>b.remarks);
+
+  // Rate table
+  const rateRows = fams.map(fam => {
+    const fo = FAM_OPTS.find(f=>f.key===fam);
+    const v = rates[fam] || '';
+    const num = parseFloat(v) || 0;
+    return `
+    <tr>
+      <td><strong>${fam}</strong> — ${fo?.full||fam}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600;color:var(--navy)">${num?fmt(num):'—'}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${num?fmtGST(num):'—'}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:700;color:var(--navy)">${num?fmtGross(num):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const grossRow = fams.length > 1 ? '' : ''; // individual rows already show gross
+
+  // PHC section
+  let phcHTML = '';
+  if (phc.enabled) {
+    const pkg = PHC_DATA[phc.pkg] || PHC_DATA.classic;
+    const modeLabel = {CL:'Cashless',VO:'Voucher',RI:'Reimbursement'}[phc.mode||'CL'] || 'Cashless';
+    const dedNote = phc.walletDed==='yes'
+      ? `<div style="font-size:.71rem;color:var(--navy);font-weight:600;padding:4px 11px 5px;background:#f0f4ff;border-bottom:1px solid #dbe4f8">✓ PHC Voucher is Wallet Deductible — utilised amount is deducted from OPD Wallet SI.</div>` : '';
+    const phcRows = phc.pkg === 'custom'
+      ? `<tr><td class="phc-cat">Custom Package</td><td style="white-space:pre-wrap">${esc(phc.customTests||'—')}</td></tr>`
+      : pkg.rows.map(r=>`<tr><td class="phc-cat">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+    phcHTML = `
+    <div class="phc-section">
+      <div class="phc-head">Preventive Health Checkup — ${pkg.label} · Mode: ${modeLabel}</div>
+      ${dedNote}
+      <table class="phc-table">
+        <thead><tr><th style="width:28%">Test Category</th><th>Tests / Parameters Covered</th></tr></thead>
+        <tbody>${phcRows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  // Endorsement clause
+  const endorseText = S.endorsement === 'prorata'
+    ? '<strong>Additions:</strong> Midterm additions allowed for natural additions only, intimated within 45 days. Premium charged on <strong>pro-rata basis</strong> from date of addition to policy expiry date. Effective from date of intimation.'
+    : '<strong>Additions:</strong> Midterm additions allowed for natural additions only, intimated within 45 days. <strong>Premium charged in full — no pro-rating.</strong> Effective from date of addition, not policy inception.';
+
+  // Wallet display
+  const walletDisplay = p.walletSI ? fmt(parseInt(p.walletSI)) : '—';
+  const planDisplay = p.plan ? `${p.plan}${p.walletSI?' — '+walletDisplay:''}` : walletDisplay;
+
+  return `
+<div class="qdh">
+  <div class="qdh-logo"><img src="${LOGO}" alt="Bajaj Health" style="height:30px" onerror="this.parentNode.innerHTML='<b style=&quot;color:#003087&quot;>BAJAJ HEALTH</b>'"></div>
+  <div class="qdh-right">
+    <div class="qdh-title">Bajaj Health — OPD Quotation</div>
+    <div class="qdh-sub">Wellness Care Plan &nbsp;|&nbsp; ${esc(p.type||'OPD Insurance Plan')}</div>
+  </div>
+</div>
+
+<div class="qstrip">
+  <span>Quote ID: <strong>${qref}</strong></span>
+  <span>Date of Quote: <strong>${fmtDate(c.date)}</strong></span>
+  <span>Expiry of Quote: <strong>${fmtDate(c.expiry)}</strong></span>
+  <span>Type of Quote: <strong>${esc(c.quoteType||'Fresh')}</strong></span>
+</div>
+
+<div class="qdet">
+  <div class="qdet-col">
+    <div class="drow"><span class="dlbl">Company Name</span><span class="dval">${esc(c.co)||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Family Construct</span><span class="dval">${fams.join(' / ')||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Total Employees</span><span class="dval">${c.emp ? Number(c.emp).toLocaleString('en-IN') : '—'}</span></div>
+    <div class="drow"><span class="dlbl">Participation Type</span><span class="dval">${esc(c.partType||'Compulsory')}</span></div>
+  </div>
+  <div class="qdet-col">
+    <div class="drow"><span class="dlbl">Product Structure</span><span class="dval">${esc(p.type||'—')}</span></div>
+    <div class="drow"><span class="dlbl">OPD Wallet SI</span><span class="dval">${walletDisplay}</span></div>
+    ${p.hasWellness && p.wellnessSI ? `<div class="drow"><span class="dlbl">Wellness Wallet (Add-on)</span><span class="dval">${fmt(parseInt(p.wellnessSI))}</span></div>` : ''}
+    <div class="drow"><span class="dlbl">Plan Variant</span><span class="dval">${esc(p.plan||'—')}</span></div>
+  </div>
+</div>
+
+${p.hasWellness && p.walletSI && p.wellnessSI ? `
+<div style="background:linear-gradient(90deg,var(--navy),var(--blue-mid));padding:8px 30px;display:flex;align-items:center;justify-content:space-between;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+  <span style="color:rgba(255,255,255,.8);font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase">🏆 Overall Policy Value — OPD Wallet + Wellness Wallet Combined</span>
+  <span style="color:#fff;font-size:1rem;font-weight:800">${fmt(parseInt(p.walletSI)+parseInt(p.wellnessSI))}</span>
+</div>` : ''}
+
+${hasBens ? `
+<div class="qsec">Benefits Covered</div>
+<table class="qtable">
+  <thead><tr>
+    <th style="width:38%">Benefit</th>
+    <th style="width:20%">Utilisation Mode</th>
+    <th>Coverage / Sublimit</th>
+    ${hasRemarks ? '<th>Remarks</th>' : ''}
+  </tr></thead>
+  <tbody>${benRows}</tbody>
+</table>` : ''}
+
+${fams.some(f=>rates[f]) ? `
+<div class="qsec">Premium Rates — Per Employee Per Annum</div>
+<div class="qprem">
+  <div class="pbox">
+    <div class="pbox-head">Pricing Breakdown — All figures in INR (Indian Rupees)</div>
+    <table class="qtable">
+      <thead><tr>
+        <th style="width:40%">Family Configuration</th>
+        <th style="text-align:right">Rate Ex. GST (₹ PEPA)</th>
+        <th style="text-align:right">GST @18%</th>
+        <th style="text-align:right">Gross Premium (₹ PEPA)</th>
+      </tr></thead>
+      <tbody>${rateRows}</tbody>
+    </table>
+    <div class="pbox-note">* All rates are Per Employee Per Annum (PEPA), exclusive of GST. GST @18% charged at policy issuance.</div>
+  </div>
+</div>` : ''}
+
+<div class="qsec">Terms, Conditions &amp; Policy Scope — Part B &amp; C (Bajaj Finserv Health OPD Policy)</div>
+<div class="qtnc">
+<div class="qsec" style="margin:0">Part B — Scope of Coverage &amp; Terms</div>
+<div class="tnc-full">
+
+<div class="tnc2-section">
+  <div class="tnc2-head">B.1 Benefits Covered</div>
+  <div class="tnc2-grid">
+    <div class="tnc2-blk"><h4>B.1.1 Prescribed Diagnostics</h4><p><strong>Covered:</strong> Outpatient diagnostic tests — biochemistry, haematology, immunology, microbiology, serology, pathology, X-ray, ultrasound, TMT — prescribed by a Registered Medical Practitioner. Availed at BFHL Network or Non-network providers, subject to plan limits.</p><p><strong>Not Covered:</strong> AYUSH procedures; preventive/non-prescribed tests; tests not necessitated by illness; all invasive procedures (see Annexure C.4).</p></div>
+    <div class="tnc2-blk"><h4>B.1.2 Tele / Insta Consultation</h4><p><strong>Covered:</strong> Audio/video/chat consultations via BFHL digital platform with Medical Practitioner/Physician/Doctor including AYUSH where available.</p><p><strong>Not Covered:</strong> Consultations outside designated platform; specialties not supported (psychologist, dietician, cosmetic surgeon, audiologist, physiotherapist, speech therapist, embryologist); psychiatric/mental health counselling under this benefit.</p></div>
+    <div class="tnc2-blk"><h4>B.1.3 In-clinic / Onsite Consultation</h4><p><strong>Covered:</strong> Consultations or second opinions from a Registered Medical Practitioner (including AYUSH) for Illness or Injury. Network or non-network up to plan limits.</p><p><strong>Reimbursement Caps:</strong> GP — ₹600 | Specialist — ₹1,000 | Super Specialist — ₹1,500 per consultation.</p></div>
+    <div class="tnc2-blk"><h4>B.1.4 Prescribed Pharmacy</h4><p><strong>Covered:</strong> Prescribed medicines (tablets, capsules, topical, liquids, suppositories, drops, inhalers, patches) within prescribed quantity. Prescription validity 30 days; 90 days for chronic diseases.</p><p><strong>Not Covered:</strong> OTC/non-prescribed medicines; health supplements; nutraceuticals; vaccinations; medical devices; AYUSH medicines.</p></div>
+    <div class="tnc2-blk"><h4>B.1.5 Dental Care</h4><p><strong>Covered:</strong> Acute treatment to natural teeth by licensed dentist. Consultation, dental X-rays/OPG, scaling &amp; polishing, fillings, RCT, pulpotomy, extractions, recementation, fluoride treatment, oral surgery, metal crowns (clinically indicated).</p><p><strong>Not Covered:</strong> Cosmetic/aesthetic procedures; bleaching; dentures; braces/aligners; retainers; space maintainers; night guards; FPD abutment RCT.</p></div>
+    <div class="tnc2-blk"><h4>B.1.6 Vision Care</h4><p><strong>Covered:</strong> Medically necessary treatment by ophthalmologist/optometrist. Spectacles, lenses &amp; contact lenses covered up to ₹3,000 per insured life.</p><p><strong>Not Covered:</strong> Frames; sunglasses; day care procedures (cataract, laser correction, biometry).</p></div>
+    <div class="tnc2-blk"><h4>B.1.7 Vaccination Cover</h4><p><strong>Covered:</strong> All WHO-approved vaccines with valid prescription/certificate, administered as per WHO schedule based on age and medical necessity.</p><p><strong>Not Covered:</strong> Vaccines not recognised or approved by WHO.</p></div>
+    <div class="tnc2-blk"><h4>B.1.8 Preventive Health Check-up (AHC)</h4><p><strong>Covered:</strong> Cashless health check-up at prescribed network hospitals/diagnostic centres available on BFHL app. Reimbursement for predefined comprehensive packages from registered labs/hospitals only.</p><p><strong>Not Covered:</strong> Standalone tests or individually charged tests outside predefined packages.</p></div>
+    <div class="tnc2-blk"><h4>B.1.9 Wellness Cover</h4><p><strong>Covered:</strong> Wellness benefits on BFHL app — Diet &amp; Nutrition, Mental Wellness, Fitness/Gym access, Health Risk Assessment, Online Fitness Sessions, Step/Activity Tracker, Quit Smoking, Weight Management — up to policy limits. Deducted from Wellness Wallet.</p><p><strong>Not Covered:</strong> Wellness benefits availed from any third-party platform outside BFHL app.</p></div>
+    <div class="tnc2-blk"><h4>B.1.10 OPD Procedures</h4><p><strong>Covered:</strong> Reimbursement for in-clinic OPD procedures resulting from injuries and illnesses as per the Company's notified exhaustive list of procedures.</p><p><strong>Not Covered:</strong> Any procedure not mentioned in the coverage list.</p></div>
+  </div>
+</div>
+
+<div class="tnc2-section">
+  <div class="tnc2-head">B.2 General Medical Exclusions</div>
+  <div class="tnc2-excl">Weight/height management or obesity treatment (including morbid obesity) &bull; Cosmetic, aesthetic and re-shaping treatments unless for reconstruction after Accident/cancer/burns &bull; Experimental/investigational/unproven treatments &bull; Congenital illness (internal and external) &bull; Alopecia, wigs or toupees &bull; Medical supplies (elastic stockings, diabetic test strips) &bull; Venereal/sexually transmitted diseases; HIV/AIDS &bull; Genetic studies &bull; Physiotherapy sessions &bull; Pregnancy/miscarriage complications (except due to Accident/Illness) &bull; Day care procedures and maternity unless specifically covered &bull; Sterility, infertility and assisted reproduction (IVF, ICSI) &bull; Health check-ups/certificates for employment or travel &bull; Expenses not medically necessary or beyond Reasonable &amp; Customary charges &bull; Naturopathy, acupressure, acupuncture, magnetic therapies &bull; Circumcision unless medically indicated &bull; Menopause/General debility &bull; Nervous breakdown/instability/self-injury &bull; Alcohol/drug abuse including detoxification &bull; Cross-pathy treatment &bull; Pre/Post Hospitalisation OPD expenses.</div>
+</div>
+
+<div class="tnc2-section">
+  <div class="tnc2-head">B.3 Utilisation Terms</div>
+  <div class="tnc2-grid">
+    <div class="tnc2-blk" style="grid-column:span 2">
+      <ol class="tnc2-list">
+        <li>All claims must be raised on the Bajaj Finserv Health app only.</li>
+        <li>Employee mobile number / Corporate email ID must be provided for app sign-up.</li>
+        <li>All claims must be submitted within <strong>30 days</strong> from the date of incidence.</li>
+        <li>Prescriptions older than 30 days will not be considered; for chronic diseases, validity is 90 days.</li>
+        <li>Cashless benefits availed from BFHL platform will not be considered for reimbursement under any benefit.</li>
+        <li>Claims with uncleared deficiencies beyond 30 days from deficiency date will not be considered.</li>
+        <li>Valid prescriptions, invoices, bills and reports must be provided as applicable.</li>
+        <li>Benefits are not transferable unless the member is covered under the Base Policy.</li>
+        <li>Unavailed consultations in the Policy Year cannot be carried forward to subsequent years.</li>
+        <li>Minimum reimbursement claim amount must be greater than ₹200; lower bills must be clubbed.</li>
+        <li>Duplicate claims for the same bill will be rejected including by spouses/common insured members.</li>
+        <li>The Company reserves the right to reject claims if the provider is blacklisted on the platform.</li>
+        <li>Inflated bills/medicines will be curtailed to Reasonable and Customary charges.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="tnc2-section">
+  <div class="tnc2-head">Part C — General Guidelines</div>
+  <div class="tnc2-grid">
+    <div class="tnc2-blk"><h4>C.1 Acceptable Age Band</h4><p><strong>E:</strong> 18–65 years &nbsp;|&nbsp; <strong>ES:</strong> 18–65 years</p><p><strong>ESC:</strong> Employee/Spouse 18–65; Children 0–25 years</p><p><strong>ESCP/ESCAP:</strong> Employee/Spouse/Children as above; Parents/Parents-in-law 0–85 years</p></div>
+    <div class="tnc2-blk"><h4>C.2 Endorsement Terms</h4><p>${endorseText}</p><p><strong>Deletions:</strong> Pro-rata refund for entire family on deletion, subject to nil claims. Intimation must be immediate on finalisation of last working day.</p></div>
+    <div class="tnc2-blk"><h4>C.3 Cancellation / Termination</h4><p>15 days written notice required. Refund scale (subject to nil claims):</p><p>Up to 1 month: <strong>75%</strong> &nbsp;|&nbsp; Up to 3 months: <strong>50%</strong> &nbsp;|&nbsp; Up to 6 months: <strong>25%</strong> &nbsp;|&nbsp; Beyond 6 months: <strong>0%</strong></p></div>
+    <div class="tnc2-blk"><h4>C.4 Fraud &amp; Misrepresentation</h4><p>Fraudulent claims or false statements will result in forfeiture of all benefits and premium paid. Amounts already paid must be repaid. Policy may be cancelled. This includes misrepresentation, concealment or any act fitted to deceive.</p></div>
+  </div>
+</div>
+
+<div class="tnc2-section">
+  <div class="tnc2-head">Annexure — Supporting Details</div>
+  <div class="tnc2-grid">
+    <div class="tnc2-blk"><h4>C.1 Chronic Disease Coverage (if applicable)</h4><p>Diabetes mellitus/insipidus, Hypertension, COPD, Arthritis/Osteoarthritis/Rheumatoid arthritis, Hyper/Hypothyroidism, Bronchitis, Epilepsy, Migraine, Heart disease/Angina, Hypercholesterolemia, Asthma, Anaemia.</p></div>
+    <div class="tnc2-blk"><h4>C.2 Claim Documentation Required</h4><p><strong>Consultation:</strong> Prescription + invoice &nbsp;|&nbsp; <strong>Diagnostics:</strong> Reports + invoice + doctor's advice &nbsp;|&nbsp; <strong>Pharmacy:</strong> Invoice + prescription &nbsp;|&nbsp; <strong>Dental:</strong> Dental Rx + X-rays + invoice &nbsp;|&nbsp; <strong>Vaccination:</strong> Certificate + invoice &nbsp;|&nbsp; <strong>Vision:</strong> Ophthalmologist Rx + invoice</p></div>
+    <div class="tnc2-blk"><h4>C.3 Document Standards</h4><p>Prescriptions must carry doctor's registration number and line of treatment. Chemist bills must include GSTIN and Drug Licence Number. Lab reports must be signed by a Pathologist. Diagnostic bills must carry GSTIN and doctor's referral. Blank documents with only signature/stamp are inadmissible.</p></div>
+    <div class="tnc2-blk"><h4>C.4 Invasive Tests (Excluded from Diagnostics)</h4><p>USG/CT/MRI guided biopsies; endoscopic biopsies; upper GI endoscopy; colonoscopy with biopsy; diagnostic laparoscopy; hysteroscopy; cystoscopy with biopsy; bronchoscopy with biopsy; CT angiography; coronary angiography; lumbar puncture; liquid biopsy; pleural procedures; lymph node biopsy and similar invasive procedures.</p></div>
+    <div class="tnc2-blk" style="grid-column:span 2"><h4>C.5 Acceptable Doctor Qualifications</h4><p>GP: MBBS &nbsp;|&nbsp; AYUSH: BHMS/BAMS/BUMS/BSMS/BNYS &nbsp;|&nbsp; Medicine: MD/DNB &nbsp;|&nbsp; Cardiology: DM/DNB/MS &nbsp;|&nbsp; Gynaecology: DGO/MS/MD/DNB &nbsp;|&nbsp; Dentistry: BDS/MDS &nbsp;|&nbsp; Neurology: MD/MS/DNB &nbsp;|&nbsp; Nephrology: DM/DNB &nbsp;|&nbsp; Urology: MCh/DNB &nbsp;|&nbsp; Orthopaedics: MS/DNB &nbsp;|&nbsp; Paediatrics: DCH/DNB/MD &nbsp;|&nbsp; Oncology: DM/DNB/MCh/PhD &nbsp;|&nbsp; ENT: MS &nbsp;|&nbsp; Dermatology: MD &nbsp;|&nbsp; Psychiatry: MD &nbsp;|&nbsp; General Surgery: MS/DNB</p></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+${phcHTML}
+
+<div class="qfoot">
+  This quote is valid for 30 days from the date of issue. &nbsp;|&nbsp;
+  Quote is valid subject to OPD being Fresh and not having any prior experience either as Insurance / Self Fund / Non-Insurance model including Health Checkup. &nbsp;|&nbsp;
+  Bajaj Finserv Health Ltd.
+</div>`;
+}
+
+// ─── WORD EXPORT ──────────────────────────────────────────
+function exportWord(S) {
+  const html = buildQuoteHTML(S);
+  const doc = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>OPD Quote</title><style>
+    @page{margin:2cm}body{font-family:Calibri,sans-serif;font-size:10pt}
+    table{border-collapse:collapse;width:100%;margin:6pt 0}
+    td,th{border:1pt solid #d1dce8;padding:4pt 7pt;font-size:9pt}
+    th{background:#003087;color:white}
+    h2{color:#003087;font-size:11pt}
+  </style></head><body>${html}</body></html>`;
+  const blob = new Blob(['\ufeff', doc], { type: 'application/msword' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const co = (S.client?.co || 'Quote').replace(/\s+/g,'_').slice(0,20);
+  a.download = `${co}_OPD_Quote.doc`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─── APP ──────────────────────────────────────────────────
+const STEPS = [
+  { label: 'Client Info', icon: '👤' },
+  { label: 'Product', icon: '⚙️' },
+  { label: 'Benefits', icon: '📊' },
+  { label: 'Rates', icon: '💰' },
+  { label: 'Options', icon: '🔧' },
+];
+
+function App() {
+  const [S, setS] = useState({
+    step: 0,
+    generated: false,
+    client: { co:'', cid:'', emp:'', families:['E','ESC','ESCP'], partType:'Compulsory', date:'', expiry:'', quoteType:'Fresh' },
+    product: { type:'Fungible Wallet', walletSI:'', hasWellness:false, wellnessSI:'', plan:'Silver' },
+    inputMode: 'paste',
+    benefits: [],
+    rates: {},
+    phc: { enabled:false, pkg:'classic', mode:'CL', walletDed:'yes', customTests:'' },
+    endorsement: 'full',
+  });
+  const quoteRef = useRef();
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const upd = patch => setS(prev => ({ ...prev, ...patch }));
+
+  function validate() {
+    if (!S.client.co.trim()) { alert('Please enter Company / Insured Name in Step 1.'); return false; }
+    if (!S.client.families.length) { alert('Please select at least one family construct in Step 1.'); return false; }
+    return true;
+  }
+
+  function generate() {
+    if (!validate()) return;
+    upd({ generated: true });
+    setTimeout(() => {
+      quoteRef.current?.scrollIntoView({ behavior:'smooth' });
+    }, 100);
+  }
+
+  function dlPDF() {
+    if (!quoteRef.current) return;
+    const btn = document.getElementById('btn-pdf');
+    if (btn) { btn.disabled = true; btn.textContent = '⟳ Generating…'; }
+    setPdfLoading(true);
+    const co = (S.client?.co || 'Quote').replace(/\s+/g,'_').slice(0,20);
+    html2pdf().set({
+      margin: [8,8,8,8],
+      filename: `${co}_OPD_Quote.pdf`,
+      image: { type:'jpeg', quality:.97 },
+      html2canvas: { scale:2, useCORS:true, logging:false },
+      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    }).from(quoteRef.current).save().finally(() => {
+      setPdfLoading(false);
+      if (btn) { btn.disabled = false; btn.innerHTML = '⬇ Download PDF'; }
+    });
+  }
+
+  const stepDone = i => i < S.step;
+  const canNext = S.step < 4;
+  const canBack = S.step > 0;
+
+  if (S.generated) {
+    return (
+      <>
+        <div className="phdr">
+          <div className="phdr-l">
+            <div className="logo-pill"><img src={LOGO} alt="Bajaj Health" style={{height:34}} onError={e=>e.target.parentNode.innerHTML='<b style="color:#003087">BAJAJ HEALTH</b>'}/></div>
+            <div className="phdr-ttl">OPD Quote Code Generator<small>Bajaj Finserv Health — Quote Output</small></div>
+          </div>
+        </div>
+        <div className="wrap" id="output-section">
+          <div className="out-bar">
+            <button id="btn-pdf" className="btn-pdf" onClick={dlPDF}>⬇ Download PDF</button>
+            <button className="btn-word" onClick={()=>exportWord(S)}>📄 Export to Word</button>
+            <button className="btn-edit-q" onClick={()=>upd({generated:false})}>✏ Edit Inputs</button>
+            <span style={{marginLeft:'auto',fontSize:'.68rem',color:'#94a3b8'}}>WCP Format v2.0</span>
+          </div>
+          <div id="quote-doc" ref={quoteRef} dangerouslySetInnerHTML={{__html: buildQuoteHTML(S)}}/>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* HEADER */}
+      <div className="phdr">
+        <div className="phdr-l">
+          <div className="logo-pill"><img src={LOGO} alt="Bajaj Health" style={{height:34}} onError={e=>e.target.parentNode.innerHTML='<b style="color:#003087">BAJAJ HEALTH</b>'}/></div>
+          <div className="phdr-ttl">OPD Quote Code Generator<small>Bajaj Finserv Health — Structured Quotation Builder</small></div>
+        </div>
+        <span className="hbadge">WCP Format · Works Offline</span>
+      </div>
+
+      <div className="wrap">
+        {/* STEPPER */}
+        <div className="stepper">
+          {STEPS.map((st,i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <div className={'st-conn '+(stepDone(i)?'done':'')}/>}
+              <div className={'st '+(stepDone(i)?'done':i===S.step?'active':'')}
+                style={{cursor:i<=S.step?'pointer':'default'}}
+                onClick={()=>{ if(i<=S.step) upd({step:i}); }}>
+                <div className="st-num">{stepDone(i)?'✓':i+1}</div>
+                <div className="st-lbl">{st.icon} {st.label}</div>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* STEP CONTENT */}
+        {S.step === 0 && <StepClient S={S} upd={upd}/>}
+        {S.step === 1 && <StepProduct S={S} upd={upd}/>}
+        {S.step === 2 && <StepBenefits S={S} upd={upd}/>}
+        {S.step === 3 && <StepRates S={S} upd={upd}/>}
+        {S.step === 4 && <StepOptions S={S} upd={upd}/>}
+
+        {/* NAVIGATION */}
+        <div className="card" style={{background:'linear-gradient(135deg,#f8fafd,#eef3fb)'}}>
+          <div className="cbody" style={{padding:'16px 24px'}}>
+            <div className="form-actions">
+              {canBack && (
+                <button className="btn-ghost" onClick={()=>upd({step:S.step-1})}>← Back</button>
+              )}
+              {canNext && (
+                <button className="btn-prim" onClick={()=>{
+                  if (S.step===0 && !S.client.co.trim()) { alert('Please enter Company Name before continuing.'); return; }
+                  upd({step:S.step+1});
+                }}>
+                  Next: {STEPS[S.step+1].label} →
+                </button>
+              )}
+              {S.step === 4 && (
+                <button className="btn-prim" style={{background:'linear-gradient(135deg,#047857,#065f46)',boxShadow:'0 3px 12px rgba(4,120,87,.3)'}} onClick={generate}>
+                  ▶ Generate Quote
+                </button>
+              )}
+              <button className="btn-ghost" style={{marginLeft:'auto'}} onClick={()=>{
+                if(confirm('Reset all fields and start over?')) setS({
+                  step:0, generated:false,
+                  client:{co:'',cid:'',emp:'',families:['E','ESC','ESCP'],partType:'Compulsory',date:'',expiry:'',quoteType:'Fresh'},
+                  product:{type:'Fungible Wallet',walletSI:'',hasWellness:false,wellnessSI:'',plan:'Silver'},
+                  inputMode:'paste', benefits:[], rates:{},
+                  phc:{enabled:false,pkg:'classic',mode:'CL',walletDed:'yes',customTests:''},
+                  endorsement:'full',
+                });
+              }}>↺ Reset All</button>
+            </div>
+            <div style={{marginTop:8,fontSize:'.68rem',color:'#94a3b8'}}>
+              Step {S.step+1} of {STEPS.length} — {STEPS[S.step].label}
+              {S.benefits.length > 0 && ` · ${S.benefits.length} benefits`}
+              {Object.values(S.rates).some(v=>v) && ` · Rates entered`}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

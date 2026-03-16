@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bajaj Health — WCP 2.0 Pricing Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+:root {
+  --navy:#003087; --blue:#0057b8; --blue-mid:#1565c0;
+  --light-blue:#e8f0fb; --accent:#c8001e;
+  --dark:#1a1a2e; --mid:#4a5568; --muted:#718096;
+  --light:#f4f7fc; --white:#fff; --border:#d1dce8;
+  --border-light:#e8edf5; --success:#047857; --error:#dc2626;
+  --row-even:#f8fafd;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;font-size:14px}
+
+/* ── PORTAL HEADER ── */
+.phdr{background:linear-gradient(135deg,var(--navy) 0%,var(--blue-mid) 100%);padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:66px;box-shadow:0 2px 20px rgba(0,48,135,.35);position:sticky;top:0;z-index:200}
+.phdr-l{display:flex;align-items:center;gap:14px}
+.logo-pill{background:#fff;border-radius:7px;padding:5px 10px;display:flex;align-items:center}
+.logo-pill img{height:34px;display:block}
+.phdr-ttl{color:#fff;font-size:1rem;font-weight:700;font-family:'EB Garamond',serif;border-left:1px solid rgba(255,255,255,.28);padding-left:14px;line-height:1.35}
+.phdr-ttl small{display:block;font-size:.68rem;font-family:'DM Sans',sans-serif;font-weight:400;opacity:.7}
+.hbadge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.9);padding:4px 12px;border-radius:20px;font-size:.67rem;letter-spacing:.08em;text-transform:uppercase}
+
+/* ── MAIN ── */
+.wrap{max-width:1060px;margin:0 auto;padding:26px 18px 44px}
+
+/* ── CARD ── */
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 24px rgba(0,48,135,.07);overflow:hidden;margin-bottom:18px}
+.chead{background:linear-gradient(90deg,var(--navy) 0%,var(--blue-mid) 100%);padding:15px 26px;display:flex;align-items:center;gap:9px}
+.chead-ico{width:30px;height:30px;background:rgba(255,255,255,.15);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.95rem}
+.chead h2{color:#fff;font-family:'EB Garamond',serif;font-size:1.08rem;font-weight:600}
+.chead p{color:rgba(255,255,255,.65);font-size:.72rem;margin-top:1px}
+.cbody{padding:26px}
+
+/* ── FORM ── */
+.fg{display:flex;flex-direction:column;gap:5px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px}
+.sp2{grid-column:span 2}.sp3{grid-column:span 3}
+label.lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.055em;color:var(--mid)}
+label.lbl .req{color:var(--accent)}
+input[type=text],input[type=number],select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.87rem;color:var(--dark);background:#fff;transition:border-color .16s,box-shadow .16s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,87,184,.1)}
+input.err,select.err{border-color:var(--error)!important}
+.ferr{font-size:.68rem;color:var(--error);display:none}.ferr.show{display:block}
+.fhint{font-size:.67rem;color:#94a3b8}
+.sw{position:relative}.sw::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mid);pointer-events:none;font-size:.78rem}
+#part-row{display:none}#part-row.show{display:flex;flex-direction:column;gap:5px}
+
+/* product tabs */
+.ptabs{display:flex;border:1.5px solid var(--border);border-radius:9px;overflow:hidden}
+.ptab{flex:1;padding:9px 5px;text-align:center;cursor:pointer;font-size:.73rem;font-weight:500;color:var(--mid);background:#fff;border:none;border-right:1px solid var(--border);transition:all .16s;line-height:1.3}
+.ptab:last-child{border-right:none}
+.ptab:hover{background:var(--light-blue);color:var(--blue)}
+.ptab.active{background:var(--navy);color:#fff;font-weight:700}
+.ptab small{display:block;font-size:.6rem;opacity:.72;margin-top:2px}
+.divider{border:none;border-top:1px solid var(--border-light);margin:20px 0}
+
+/* buttons */
+.btn-gen{background:linear-gradient(135deg,var(--navy),var(--blue-mid));color:#fff;border:none;padding:11px 32px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 3px 12px rgba(0,87,184,.27);transition:all .16s;display:flex;align-items:center;gap:7px}
+.btn-gen:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(0,87,184,.37)}
+.btn-rst{background:#fff;color:var(--mid);border:1.5px solid var(--border);padding:11px 20px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .16s}
+.btn-rst:hover{border-color:var(--blue);color:var(--blue)}
+.form-actions{display:flex;gap:10px;align-items:center;margin-top:6px}
+
+/* alerts */
+.alert{padding:9px 13px;border-radius:8px;font-size:.8rem;display:none;align-items:center;gap:7px;margin-top:10px}
+.alert.show{display:flex}
+.alert-err{background:#fef2f2;border:1px solid #fecaca;color:var(--error)}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:var(--blue)}
+
+/* ──────────────────────────────────────
+   QUOTE DOCUMENT
+   ────────────────────────────────────── */
+#quote-output{display:none}
+#quote-output.show{display:block}
+
+#quote-doc{background:#fff;border-radius:12px;box-shadow:0 2px 24px rgba(0,48,135,.08);overflow:hidden;font-size:12.5px}
+
+/* doc header */
+.qdh{background:var(--navy);padding:18px 30px;display:flex;align-items:center;justify-content:space-between;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qdh-logo{background:#fff;border-radius:6px;padding:5px 9px;display:inline-flex;align-items:center}
+.qdh-logo img{height:30px;display:block}
+.qdh-right{text-align:right}
+.qdh-title{color:#fff;font-size:1.1rem;font-weight:700;font-family:'EB Garamond',serif;letter-spacing:.02em}
+.qdh-sub{color:rgba(255,255,255,.6);font-size:.7rem;margin-top:2px}
+
+/* strip */
+.qstrip{background:var(--light-blue);border-bottom:1px solid var(--border);padding:7px 30px;display:flex;justify-content:space-between;align-items:center;font-size:.72rem;color:var(--mid);flex-wrap:wrap;gap:6px}
+.qstrip strong{color:var(--blue);font-weight:700}
+
+/* company details 2-col */
+.qdet{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--navy)}
+.qdet-col{padding:14px 30px}
+.qdet-col:first-child{border-right:1px solid var(--border-light)}
+.drow{display:flex;align-items:baseline;padding:3.5px 0;border-bottom:1px dotted var(--border-light);font-size:.78rem}
+.drow:last-child{border-bottom:none}
+.dlbl{color:var(--muted);min-width:175px;font-size:.72rem;flex-shrink:0}
+.dval{color:var(--dark);font-weight:600}
+
+/* section heads inside doc */
+.qsec{background:var(--navy);color:#fff;font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:6px 30px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* benefit table */
+.qtable{width:100%;border-collapse:collapse;font-size:.77rem}
+.qtable thead tr th{background:#1a3a6b;color:#fff;padding:7px 13px;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qtable tbody tr td{padding:6px 13px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.qtable tbody tr:nth-child(even) td{background:var(--row-even)}
+.qtable .tsec td{background:#eef3fb!important;color:var(--blue);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;padding:5.5px 13px}
+
+/* mode badges */
+.mb{display:inline-block;padding:1px 7px;border-radius:4px;font-size:.63rem;font-weight:700}
+.mb-cl{background:#d1fae5;color:#065f46}
+.mb-ri{background:#fef3c7;color:#92400e}
+.mb-bt{background:#e0e7ff;color:#3730a3}
+.mb-vo{background:#fce7f3;color:#9d174d}
+
+/* ── PREMIUM 3-CELL BOX ── */
+.qprem{padding:16px 30px 18px}
+.pbox{border:2px solid var(--navy);border-radius:10px;overflow:hidden}
+.pbox-head{background:var(--navy);color:#fff;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:6px 18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pgrid{display:grid;grid-template-columns:1fr 1fr 1fr}
+.pcell{padding:14px 18px;text-align:center;border-right:1px solid var(--border)}
+.pcell:last-child{border-right:none}
+.pc-lbl{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.pc-val{font-family:'EB Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--navy);line-height:1}
+.pc-sub{font-size:.64rem;color:var(--muted);margin-top:3px}
+.pcell.tot{background:var(--navy);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pcell.tot .pc-lbl{color:rgba(255,255,255,.62)}
+.pcell.tot .pc-val{color:#fcd34d;font-size:1.7rem}
+.pcell.tot .pc-sub{color:rgba(255,255,255,.48)}
+
+/* T&C */
+.qtnc{padding:0 30px 18px}
+.tnc-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:12px}
+.tnc-blk{margin-bottom:10px}
+.tnc-blk h4{font-size:.7rem;font-weight:700;color:var(--navy);margin-bottom:3px}
+.tnc-blk ol,.tnc-blk ul{padding-left:14px}
+.tnc-blk li{font-size:.69rem;color:var(--mid);line-height:1.52;margin-bottom:1.5px}
+
+/* doc footer */
+.qfoot{background:var(--navy);color:rgba(255,255,255,.6);font-size:.63rem;text-align:center;padding:7px 18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* output action bar */
+.out-bar{display:flex;gap:10px;align-items:center;margin:0 0 14px}
+.btn-pdf{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .16s}
+.btn-pdf:hover{background:#a60017;transform:translateY(-1px)}
+.btn-pdf:disabled{opacity:.65;pointer-events:none}
+.btn-new{background:#fff;color:var(--blue);border:1.5px solid var(--blue);padding:10px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .16s}
+.btn-new:hover{background:var(--light-blue)}
+
+/* plan badges */
+.pbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 11px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.03em}
+.pb-basic{background:#e0e7ff;color:#3730a3}
+.pb-bronze{background:#fef3c7;color:#92400e}
+.pb-silver{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+.pb-gold{background:#fef9c3;color:#713f12}
+.pb-plat{background:#ede9fe;color:#5b21b6}
+.pb-platpp{background:linear-gradient(135deg,#1e40af,#7c3aed);color:#fff}
+
+/* site footer */
+.sfoot{text-align:center;padding:14px;font-size:.68rem;color:#94a3b8;border-top:1px solid var(--border);margin-top:10px}
+
+/* ── PRINT ── */
+@media print{
+  body{background:#fff}
+  .phdr,#input-section,.out-bar,.sfoot{display:none!important}
+  .wrap{padding:0;max-width:100%}
+  #quote-output{display:block!important}
+  #quote-doc{box-shadow:none;border-radius:0;font-size:11px}
+  .qdh,.qsec,.qtable thead tr th,.pbox-head,.pcell.tot,.qfoot{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .tnc-cols{grid-template-columns:1fr 1fr}
+  @page{margin:8mm;size:A4}
+}
+
+@media(max-width:700px){
+  .fgrid{grid-template-columns:1fr 1fr}
+  .qdet{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:1fr}
+  .pcell{border-right:none;border-bottom:1px solid var(--border)}
+  .tnc-cols{grid-template-columns:1fr}
+}
+
+/* ── COMMERCIAL PANEL ── */
+.comm-panel{background:linear-gradient(135deg,#1e2d4a 0%,#1a2845 100%);border-radius:11px;padding:18px 22px;margin-top:16px;border:2px solid #4a6fa5}
+.comm-panel-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.comm-panel-head .cp-icon{font-size:1rem;background:rgba(255,255,255,.1);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.comm-panel-head h3{color:#e2e8f0;font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.comm-panel-head span{color:#64748b;font-size:.68rem;margin-left:auto}
+.comm-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.comm-field{display:flex;flex-direction:column;gap:5px}
+.comm-field label{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.055em;color:#94a3b8}
+.comm-field label .def{color:#475569;font-weight:400;font-size:.62rem;margin-left:4px}
+.comm-input-wrap{position:relative}
+.comm-input-wrap input{width:100%;padding:9px 30px 9px 12px;background:#0f172a;border:1.5px solid #334155;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:#e2e8f0;transition:border-color .16s}
+.comm-input-wrap input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.15)}
+.comm-input-wrap .pct{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#475569;font-size:.8rem;pointer-events:none;font-weight:600}
+.comm-input-wrap input.cerr{border-color:#ef4444}
+.comm-hint{font-size:.65rem;color:#475569}
+.comm-warn{background:#7c2d12;border:1px solid #c2410c;color:#fed7aa;padding:6px 11px;border-radius:6px;font-size:.7rem;display:none;margin-top:8px;align-items:center;gap:6px}
+.comm-warn.show{display:flex}
+.comm-note{font-size:.66rem;color:#475569;margin-top:10px;border-top:1px solid #1e293b;padding-top:8px;line-height:1.5}
+.comm-note strong{color:#64748b}
+/* adjusted rate preview */
+.rate-preview{display:flex;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;background:#0f172a;border-radius:7px;border:1px solid #1e293b}
+.rp-label{font-size:.65rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+.rp-val{font-size:.85rem;font-weight:700;color:#38bdf8;margin-left:auto}
+.rp-arrow{color:#334155;font-size:.75rem}
+
+
+/* ── PRODUCT TYPE TAGS ── */
+.ptag{display:block;font-size:.58rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:3px;padding:1px 5px;margin-top:3px;text-align:center}
+.ptag-cv{background:rgba(0,87,184,.15);color:#1565c0}
+.ptab.active .ptag-cv{background:rgba(255,255,255,.2);color:#fff}
+.ptag-co{background:rgba(200,0,30,.15);color:#c8001e}
+.ptab.active .ptag-co{background:rgba(255,100,100,.25);color:#ffb3b3}
+.ptab-comp-only{}
+
+/* ── WELLNESS TOGGLE ── */
+.well-toggle{display:flex;background:#f4f7fc;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-top:2px}
+.well-opt{flex:1;padding:9px 10px;text-align:center;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--mid);background:transparent;border:none;transition:all .16s;line-height:1.3}
+.well-opt:hover{background:var(--light-blue);color:var(--blue)}
+.well-opt.wsel{background:var(--navy);color:#fff;font-weight:700}
+.well-opt small{display:block;font-size:.63rem;opacity:.75;margin-top:1px}
+.well-opt.wsel small{opacity:.7}
+.well-disc-note{font-size:.67rem;color:var(--success);background:#d1fae5;border:1px solid #6ee7b7;border-radius:5px;padding:4px 9px;margin-top:5px;display:none}
+.well-disc-note.show{display:block}
+
+/* ── PER-FAMILY RATE PANEL ── */
+.fam-rate-btn{background:white;color:var(--blue);border:1.5px solid var(--blue);padding:10px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .16s;display:flex;align-items:center;gap:6px}
+.fam-rate-btn:hover{background:var(--light-blue)}
+.fam-rate-panel{background:#f8fafd;border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-top:12px;display:none}
+.fam-rate-panel.show{display:block}
+.fam-rate-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mid);margin-bottom:10px}
+.fam-rate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.fam-cell{background:white;border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center}
+.fam-cell .fc-type{font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--mid);letter-spacing:.04em;margin-bottom:4px}
+.fam-cell .fc-rate{font-size:.95rem;font-weight:700;color:var(--navy)}
+.fam-cell .fc-sub{font-size:.62rem;color:var(--muted);margin-top:2px}
+.fam-totals{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fam-tot-cell{background:var(--navy);border-radius:8px;padding:10px 14px;text-align:center}
+.fam-tot-cell .ft-lbl{font-size:.65rem;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.fam-tot-cell .ft-val{font-size:1rem;font-weight:700;color:#fcd34d}
+
+/* ── PHC TABLE ── */
+.phc-section{margin-top:16px;border-top:2px solid var(--navy)}
+.phc-head{background:var(--navy);color:white;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:6px 13px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.phc-table{width:100%;border-collapse:collapse;font-size:.71rem}
+.phc-table th{background:#1a3a6b;color:white;padding:6px 10px;text-align:left;font-weight:600;font-size:.67rem;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.phc-table td{padding:5px 10px;border-bottom:1px solid var(--border-light);vertical-align:top;color:var(--dark)}
+.phc-table tr:nth-child(even) td{background:#f8fafd}
+.phc-table .phc-cat{font-weight:700;color:var(--navy);font-size:.69rem}
+
+/* ── EDIT BUTTON ── */
+.btn-edit{background:white;color:var(--mid);border:1.5px solid var(--border);padding:10px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .16s}
+.btn-edit:hover{border-color:var(--blue);color:var(--blue)}
+
+
+/* ── OFFICIAL T&C LAYOUT ── */
+.tnc-full{padding:12px 30px 16px}
+.tnc2-section{margin-bottom:14px}
+.tnc2-head{background:#1a3a6b;color:white;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 10px;border-radius:4px;margin-bottom:8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.tnc2-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px}
+.tnc2-blk{font-size:.68rem;color:var(--dark)}
+.tnc2-blk h4{font-size:.7rem;font-weight:700;color:var(--navy);margin-bottom:3px}
+.tnc2-blk p{line-height:1.5;color:var(--mid);margin-bottom:3px}
+.tnc2-blk strong{color:var(--dark)}
+.tnc2-excl{font-size:.67rem;color:var(--mid);line-height:1.65;padding:6px 8px;background:#f8fafd;border-radius:5px;border-left:3px solid var(--navy)}
+.tnc2-list{padding-left:15px}
+.tnc2-list li{font-size:.68rem;color:var(--mid);line-height:1.55;margin-bottom:2px}
+
+@media print {
+  .tnc2-grid{grid-template-columns:1fr 1fr}
+  .tnc2-blk{break-inside:avoid}
+  .tnc2-section{break-inside:avoid}
+  .phc-section{break-before:page}
+}
+
+</style>
+</head>
+<body>
+
+<!-- PORTAL HEADER -->
+<div class="phdr">
+  <div class="phdr-l">
+    <div class="logo-pill">
+      <img src="data:image/png;base64,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"
+        alt="Bajaj Health" onerror="this.parentNode.innerHTML='<b style=\'color:#003087;font-size:.95rem\'>BAJAJ HEALTH</b>'">
+    </div>
+    <div class="phdr-ttl">WCP 2.0 — OPD Pricing Portal<small>Wellness Care Plan | OPD Quotation Tool</small></div>
+  </div>
+  
+</div>
+
+<div class="wrap">
+
+<!-- ══ INPUT FORM ══ -->
+<div id="input-section" class="card">
+  <div class="chead">
+    <div class="chead-ico">📋</div>
+    <div><h2>Quote Configuration</h2><p>Enter client & coverage parameters to generate a structured OPD quotation</p></div>
+  </div>
+  <div class="cbody">
+    <div class="fgrid">
+
+      <!-- PRODUCT STRUCTURE FIRST -->
+      <div class="fg sp3" style="margin-bottom:4px">
+        <label class="lbl" style="margin-bottom:8px">Product Structure <span class="req">*</span></label>
+        <div class="ptabs">
+          <button class="ptab" onclick="pickProd('ADDITIVE',this)">Additive<small>Fixed sublimits</small><span class="ptag ptag-cv">Comp / Vol</span></button>
+          <button class="ptab" onclick="pickProd('FUNGIBLE',this)">Fungible<small>Flexible wallet</small><span class="ptag ptag-cv">Comp / Vol</span></button>
+          <button class="ptab" onclick="pickProd('OPEN',this)">Open Wallet<small>Full flexibility</small><span class="ptag ptag-cv">Comp / Vol</span></button>
+          <button class="ptab ptab-comp-only" onclick="pickProd('FUNGIBLE_SMALL',this)">Fungible 5K/10K<small>With wellness</small><span class="ptag ptag-co">Compulsory Only</span></button>
+          <button class="ptab ptab-comp-only" onclick="pickProd('SMALL_TICKET',this)">Small Ticket<small>Digital OPD</small><span class="ptag ptag-co">Compulsory Only</span></button>
+        </div>
+        <div class="alert alert-err" id="a-componly" style="margin-top:8px">⛔ This product is Compulsory Only. Voluntary coverage is not available for this structure. Please select Compulsory or choose a different product.</div>
+        <div class="ferr" id="e-product" style="margin-top:5px">Please select a product structure</div>
+      </div>
+
+    </div>
+    <hr class="divider">
+    <div class="fgrid">
+
+      <div class="fg sp2">
+        <label class="lbl">Client / Company Name <span class="req">*</span></label>
+        <input type="text" id="f-client" placeholder="e.g. Vedanta Resources Ltd." maxlength="100">
+        <div class="ferr" id="e-client">Client name is required</div>
+      </div>
+
+      <div class="fg">
+        <label class="lbl">Date of Quote</label>
+        <input type="text" id="f-date" readonly style="background:#f8fafc;cursor:default">
+      </div>
+
+      <div class="fg">
+        <label class="lbl">Number of Employees <span class="req">*</span></label>
+        <input type="number" id="f-emp" placeholder="50 – 2000" min="1" max="9999">
+        <div class="fhint">Eligible range: 50 to 2,000</div>
+        <div class="ferr" id="e-emp">Must be between 50 and 2,000. Outside range: refer to Underwriting.</div>
+      </div>
+
+      <div class="fg">
+        <label class="lbl">Family Type <span class="req">*</span></label>
+        <div class="sw"><select id="f-family">
+          <option value="">— Select —</option>
+          <option value="E">E — Employee Only</option>
+          <option value="ESC">ESC — Employee + Spouse + Child</option>
+          <option value="ESCP">ESCP — Emp + Spouse + Child + Parent</option>
+        </select></div>
+        <div class="ferr" id="e-family">Family type is required</div>
+      </div>
+
+      <!-- Coverage Type: hidden for Fungible5K/10K and Small Ticket (always Compulsory) -->
+      <div class="fg" id="coverage-row">
+        <label class="lbl">Coverage Type <span class="req">*</span></label>
+        <div class="sw"><select id="f-coverage" onchange="togglePart()">
+          <option value="">— Select —</option>
+          <option value="COMPULSORY">Compulsory</option>
+          <option value="VOLUNTARY">Voluntary</option>
+        </select></div>
+        <div class="ferr" id="e-coverage">Coverage type is required</div>
+      </div>
+
+      <div class="fg" id="part-row">
+        <label class="lbl">Participation Slab <span class="req">*</span></label>
+        <div class="sw"><select id="f-part">
+          <option value="">— Select Slab —</option>
+          <option value="10">Min 10% Participation</option>
+          <option value="20">11–20% Participation</option>
+          <option value="30">21–30% Participation</option>
+          <option value="50">31–50% Participation</option>
+        </select></div>
+        <div class="ferr" id="e-part">Participation slab is required for voluntary</div>
+      </div>
+
+      <!-- OPD Wallet SI — options shown dynamically based on product -->
+      <div class="fg">
+        <label class="lbl" id="wallet-field-lbl">OPD Wallet SI <span class="req">*</span></label>
+        <div class="sw"><select id="f-wallet" onchange="onCommChange()">
+          <option value="">— Select Wallet —</option>
+          <option value="5000">₹5,000 — Basic</option>
+          <option value="10000">₹10,000 — Bronze</option>
+          <option value="15000">₹15,000 — Silver</option>
+          <option value="20000">₹20,000 — Gold</option>
+          <option value="25000">₹25,000 — Platinum</option>
+          <option value="30000">₹30,000 — Platinum Plus</option>
+        </select></div>
+        <div class="ferr" id="e-wallet">OPD Wallet SI is required</div>
+      </div>
+
+      <!-- Wellness wallet: hidden for Fungible5K/10K and Small Ticket -->
+      <div class="fg sp3" id="wellness-row">
+        <label class="lbl">Wellness Wallet Option <span class="req">*</span></label>
+        <div class="well-toggle">
+          <button type="button" class="well-opt wsel" id="wt-with" onclick="setWellness('with')">
+            With Wellness Wallet
+            <small>Wellness SI = OPD SI (over & above)</small>
+          </button>
+          <button type="button" class="well-opt" id="wt-without" onclick="setWellness('without')">
+            Without Wellness Wallet
+            <small>OPD Benefits only — no wellness wallet</small>
+          </button>
+        </div>
+        <div class="well-disc-note" id="well-disc-note">✓ Without Wellness Wallet selected — wellness benefits excluded from quote</div>
+      </div>
+
+    </div>
+    <hr class="divider">
+    <!-- COMMERCIAL ADJUSTMENT PANEL -->
+    <div class="comm-panel">
+      <div class="comm-panel-head">
+        <div class="cp-icon">⚙</div>
+        <h3>Commercial Adjustment</h3>
+        
+      </div>
+      <div class="comm-grid">
+        <div class="comm-field">
+          <label>Brokerage % <span class="def">(Default: 7.5%)</span></label>
+          <div class="comm-input-wrap">
+            <input type="number" id="c-brok" value="7.5" min="0" max="15" step="0.1" oninput="onCommChange()">
+            <span class="pct">%</span>
+          </div>
+          <div class="comm-hint">Range: 0% – 15%</div>
+          <div class="ferr" id="e-brok">Max brokerage is 15%</div>
+        </div>
+        <div class="comm-field">
+          <label>Insurance Fee % <span class="def">(Default: 2.5%)</span></label>
+          <div class="comm-input-wrap">
+            <input type="number" id="c-ins" value="2.5" min="0" max="10" step="0.1" oninput="onCommChange()">
+            <span class="pct">%</span>
+          </div>
+          <div class="comm-hint">Range: 0% – 10%</div>
+          <div class="ferr" id="e-ins">Max insurance fee is 10%</div>
+        </div>
+        <div class="comm-field">
+          <label>OPEX % <span class="def">(Default: 15%)</span></label>
+          <div class="comm-input-wrap">
+            <input type="number" id="c-opex" value="15" min="10" max="25" step="0.5" oninput="onCommChange()">
+            <span class="pct">%</span>
+          </div>
+          <div class="comm-hint">Range: 10% – 25% (min 10% protected)</div>
+          <div class="ferr" id="e-opex">OPEX must be between 10% and 25%</div>
+        </div>
+      </div>
+      <div class="comm-warn" id="w-loading">⚠ Brokerage + Insurance Fee exceeds 20% — please review before proceeding.</div>
+      <div class="rate-preview" id="rate-preview" style="display:none">
+        <span class="rp-label">Adjusted Rate Preview</span>
+        <span class="rp-arrow">→</span>
+        <span class="rp-val" id="rp-val">—</span>
+        <span class="rp-label" style="margin-left:4px">per employee (Ex GST)</span>
+      </div>
+    </div>
+
+    <div class="alert alert-err" id="a-uw">⚠️ Employee count is outside the eligible range (50–2,000). This case must be referred to Underwriting.</div>
+    <div class="alert alert-err" id="a-open">⚠️ Open Wallet structure requires a minimum of 100 employees.</div>
+    <div class="alert alert-info" id="a-miss">ℹ️ Rate not found for this combination. Verify inputs or contact the Pricing team.</div>
+
+    <div class="form-actions" style="flex-wrap:wrap;gap:10px">
+      <button class="btn-gen" onclick="generateQuote()">⚡ Generate Quote</button>
+      <button type="button" class="fam-rate-btn" onclick="showFamilyRates()">👪 Preview Family Rates</button>
+      <button class="btn-rst" onclick="resetForm()">↺ Reset</button>
+    </div>
+
+    <!-- FAMILY RATE PREVIEW PANEL (input screen only) -->
+    <div class="fam-rate-panel" id="fam-rate-panel">
+      <div class="fam-rate-title">Per Employee Rate Preview — By Family Type (Ex GST)</div>
+      <div class="fam-rate-grid">
+        <div class="fam-cell"><div class="fc-type">E — Employee Only</div><div class="fc-rate" id="fr-e">—</div><div class="fc-sub">per employee / annum</div></div>
+        <div class="fam-cell"><div class="fc-type">ESC — Emp + Spouse + Child</div><div class="fc-rate" id="fr-esc">—</div><div class="fc-sub">per employee / annum</div></div>
+        <div class="fam-cell"><div class="fc-type">ESCP — + Parents</div><div class="fc-rate" id="fr-escp">—</div><div class="fc-sub">per employee / annum</div></div>
+      </div>
+      <div class="fam-totals">
+        <div class="fam-tot-cell"><div class="ft-lbl">Total Premium — Ex GST (selected family)</div><div class="ft-val" id="fr-net">—</div></div>
+        <div class="fam-tot-cell"><div class="ft-lbl">Total Gross Premium — Incl GST @ 18%</div><div class="ft-val" id="fr-gross">—</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUOTE OUTPUT ══ -->
+<div id="quote-output">
+
+  <div class="out-bar">
+    <button class="btn-pdf" id="btn-dl" onclick="downloadPDF()">⬇ Download PDF Quote</button>
+    <button class="btn-edit" onclick="editQuote()">✏ Edit Inputs</button>
+    <button class="btn-new" onclick="newQuote()">+ New Quote</button>
+    <span style="margin-left:auto;font-size:.68rem;color:#94a3b8">Rate Version: v2.0.2025</span>
+  </div>
+
+  <!-- ── THE PRINTABLE DOCUMENT ── -->
+  <div id="quote-doc">
+
+    <!-- Header -->
+    <div class="qdh">
+      <div class="qdh-logo">
+        <img src="data:image/png;base64,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"
+          alt="Bajaj Health" onerror="this.parentNode.innerHTML='<b style=\'color:#003087\'>BAJAJ HEALTH</b>'">
+      </div>
+      <div class="qdh-right">
+        <div class="qdh-title">Bajaj Health — OPD Quotation</div>
+        <div class="qdh-sub">Wellness Care Plan 2.0 &nbsp;|&nbsp; <span id="qd-plan-hdr"></span></div>
+      </div>
+    </div>
+
+    <!-- Strip -->
+    <div class="qstrip">
+      <span>Quote ID: <strong id="qd-id"></strong></span>
+      <span>Date of Quote: <strong id="qd-date"></strong></span>
+      <span>Expiry of Quote: <strong id="qd-expiry"></strong></span>
+      <span>Type of Quote: <strong>Fresh</strong></span>
+    </div>
+
+    <!-- Company Details -->
+    <div class="qdet">
+      <div class="qdet-col">
+        <div class="drow"><span class="dlbl">Company Name</span><span class="dval" id="qd-name"></span></div>
+        <div class="drow"><span class="dlbl">Family Construct</span><span class="dval" id="qd-family"></span></div>
+        <div class="drow"><span class="dlbl">Total Employees</span><span class="dval" id="qd-emp"></span></div>
+        <div class="drow"><span class="dlbl">Participation Type</span><span class="dval" id="qd-cov"></span></div>
+      </div>
+      <div class="qdet-col">
+        <div class="drow"><span class="dlbl">Product Structure</span><span class="dval" id="qd-struct"></span></div>
+        <div class="drow" id="qd-wallet-row"><span class="dlbl" id="qd-wallet-lbl">OPD Wallet SI</span><span class="dval" id="qd-wallet"></span></div>
+        <div class="drow" id="qd-wellness-row"><span class="dlbl">Wellness Wallet (Add-on)</span><span class="dval" id="qd-wellness"></span></div>
+        <div class="drow"><span class="dlbl">Plan Variant</span><span class="dval" id="qd-plan"></span></div>
+      </div>
+    </div>
+    <!-- Combined wallet value banner — shown only when wellness is selected -->
+    <div id="qd-combined-row" style="display:none;background:linear-gradient(90deg,#003087 0%,#0057B8 100%);padding:8px 30px;display:none;align-items:center;justify-content:space-between">
+      <span style="color:rgba(255,255,255,.8);font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase">🏆 Overall Policy Value (OPD Wallet + Wellness Wallet Combined)</span>
+      <span style="color:#fff;font-size:1rem;font-weight:800" id="qd-combined">—</span>
+    </div>
+
+    <!-- Benefits -->
+    <div class="qsec">Benefits Covered</div>
+    <table class="qtable">
+      <thead><tr>
+        <th style="width:40%">Benefit</th>
+        <th style="width:22%">Utilization Mode</th>
+        <th>Coverage / Sublimit</th>
+      </tr></thead>
+      <tbody id="qd-tbody"></tbody>
+    </table>
+    <div class="qprem">
+      <div class="pbox">
+        <div class="pbox-head">Pricing Breakdown — All figures in INR (Indian Rupees)</div>
+        <div class="pgrid">
+          <div class="pcell">
+            <div class="pc-lbl">Per Employee Rate</div>
+            <div class="pc-val" id="qd-rate"></div>
+            <div class="pc-sub">Ex. GST &nbsp;|&nbsp; Per Annum</div>
+          </div>
+          <div class="pcell">
+            <div class="pc-lbl">Total Premium Ex. GST</div>
+            <div class="pc-val" id="qd-net"></div>
+            <div class="pc-sub">GST @ 18%: <strong id="qd-gst" style="color:var(--navy)"></strong></div>
+          </div>
+          <div class="pcell tot">
+            <div class="pc-lbl">Total Gross Premium</div>
+            <div class="pc-val" id="qd-gross"></div>
+            <div class="pc-sub">Incl. GST @ 18%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T&C -->
+    <div class="qsec">Terms, Conditions &amp; Policy Scope — Part B &amp; C (Bajaj Finserv Health OPD Policy)</div>
+    <div class="qtnc">
+
+  <!-- ═══ PAGE 2: POLICY T&C ═══ -->
+  <div class="qsec" style="margin:0 -0px">Part B — Scope of Coverage &amp; Terms</div>
+
+  <div class="tnc-full">
+
+    <div class="tnc2-section">
+      <div class="tnc2-head">B.1 Benefits Covered</div>
+      <div class="tnc2-grid">
+
+        <div class="tnc2-blk">
+          <h4>B.1.1 Prescribed Diagnostics</h4>
+          <p><strong>Covered:</strong> Outpatient diagnostic tests — biochemistry, haematology, immunology, microbiology, serology, pathology, X-ray, ultrasound, TMT — prescribed by a Registered Medical Practitioner. Availed at BFHL Network or Non-network providers, subject to plan limits.</p>
+          <p><strong>Not Covered:</strong> AYUSH procedures; preventive/non-prescribed tests; tests not necessitated by illness; all invasive procedures (see Annexure C.4).</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.2 Tele / Insta Consultation</h4>
+          <p><strong>Covered:</strong> Audio/video/chat consultations via BFHL digital platform with Medical Practitioner/Physician/Doctor including AYUSH where available.</p>
+          <p><strong>Not Covered:</strong> Consultations outside designated platform; specialties not supported (psychologist, dietician, cosmetic surgeon, audiologist, physiotherapist, speech therapist, embryologist); psychiatric/mental health counselling under this benefit.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.3 In-clinic / Onsite Consultation</h4>
+          <p><strong>Covered:</strong> Consultations or second opinions from a Registered Medical Practitioner (including AYUSH) for Illness or Injury. Network or non-network up to plan limits.</p>
+          <p><strong>Reimbursement Caps:</strong> GP — ₹600 | Specialist — ₹1,000 | Super Specialist — ₹1,500 per consultation.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.4 Prescribed Pharmacy</h4>
+          <p><strong>Covered:</strong> Prescribed medicines (tablets, capsules, topical, liquids, suppositories, drops, inhalers, patches) within prescribed quantity. Prescription validity 30 days; 90 days for chronic diseases.</p>
+          <p><strong>Not Covered:</strong> OTC/non-prescribed medicines; health supplements; nutraceuticals; vaccinations; medical devices; AYUSH medicines.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.5 Dental Care</h4>
+          <p><strong>Covered:</strong> Acute treatment to natural teeth by licensed dentist. Covered: consultation, dental X-rays/OPG, scaling &amp; polishing, fillings (silver/composite/GI), RCT (adults/children), pulpotomy, extractions (normal/surgical), recementation, fluoride treatment, oral surgery, metal crowns (clinically indicated).</p>
+          <p><strong>Not Covered:</strong> Cosmetic/aesthetic procedures; bleaching; dentures; braces/aligners; retainers; space maintainers; night guards; FPD abutment RCT.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.6 Vision Care</h4>
+          <p><strong>Covered:</strong> Medically necessary treatment by ophthalmologist/optometrist for eye problems. Spectacles, lenses &amp; contact lenses covered up to ₹3,000 per insured life.</p>
+          <p><strong>Not Covered:</strong> Frames; sunglasses (prescription or otherwise); day care procedures (cataract, laser correction, biometry).</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.7 Vaccination Cover</h4>
+          <p><strong>Covered:</strong> All WHO-approved vaccines with valid prescription/certificate, administered as per WHO schedule based on age and medical necessity.</p>
+          <p><strong>Not Covered:</strong> Vaccines not recognised or approved by WHO.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.8 Preventive Health Check-up (AHC)</h4>
+          <p><strong>Covered:</strong> Cashless health check-up at prescribed network hospitals/diagnostic centres available on BFHL app. Reimbursement for predefined comprehensive packages from registered labs/hospitals only.</p>
+          <p><strong>Not Covered:</strong> Standalone tests or individually charged tests outside predefined packages.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.9 Wellness Cover</h4>
+          <p><strong>Covered:</strong> Wellness benefits on BFHL app — Diet &amp; Nutrition, Mental Wellness, Fitness/Gym access, Health Risk Assessment, Online Fitness Sessions, Step/Activity Tracker, Quit Smoking, Weight Management — up to policy limits. Deducted from Wellness Wallet.</p>
+          <p><strong>Not Covered:</strong> Wellness benefits availed from any third-party platform outside BFHL app.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>B.1.10 OPD Procedures</h4>
+          <p><strong>Covered:</strong> Reimbursement for in-clinic OPD procedures resulting from injuries and illnesses as per the Company's notified exhaustive list of procedures.</p>
+          <p><strong>Not Covered:</strong> Any procedure not mentioned in the coverage list.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tnc2-section">
+      <div class="tnc2-head">B.2 General Medical Exclusions</div>
+      <div class="tnc2-excl">
+        Weight/height management or obesity treatment (including morbid obesity) &bull; Cosmetic, aesthetic and re-shaping treatments unless for reconstruction after Accident/cancer/burns &bull; Experimental/investigational/unproven treatments &bull; Congenital illness (internal and external) &bull; Alopecia, wigs or toupees &bull; Medical supplies (elastic stockings, diabetic test strips) &bull; Venereal/sexually transmitted diseases; HIV/AIDS &bull; Genetic studies &bull; Physiotherapy sessions &bull; Pregnancy/miscarriage complications (except due to Accident/Illness) &bull; Day care procedures and maternity unless specifically covered &bull; Sterility, infertility and assisted reproduction (IVF, ICSI) &bull; Health check-ups/certificates for employment or travel &bull; Expenses not medically necessary or beyond Reasonable &amp; Customary charges &bull; Naturopathy, acupressure, acupuncture, magnetic therapies; Patanjali/herbal therapies &bull; Circumcision unless medically indicated &bull; Menopause/General debility &bull; Nervous breakdown/instability/self-injury &bull; Alcohol/drug abuse including detoxification &bull; Cross-pathy treatment &bull; Pre/Post Hospitalisation OPD expenses (covered under IPD policy if any).
+      </div>
+    </div>
+
+    <div class="tnc2-section">
+      <div class="tnc2-head">B.3 Utilisation Terms</div>
+      <div class="tnc2-grid">
+        <div class="tnc2-blk" style="grid-column:span 2">
+          <ol class="tnc2-list">
+            <li>All claims must be raised on the Bajaj Finserv Health app only.</li>
+            <li>Employee mobile number / Corporate email ID must be provided for app sign-up.</li>
+            <li>All claims must be submitted within <strong>30 days</strong> from the date of incidence.</li>
+            <li>Prescriptions older than 30 days will not be considered; for chronic diseases, validity is 90 days.</li>
+            <li>Cashless benefits availed from BFHL platform will not be considered for reimbursement under any benefit.</li>
+            <li>Claims with uncleared deficiencies beyond 30 days from deficiency date will not be considered.</li>
+            <li>Valid prescriptions, invoices, bills and reports must be provided as applicable.</li>
+            <li>Benefits are not transferable unless the member is covered under the Base Policy.</li>
+            <li>Unavailed consultations in the Policy Year cannot be carried forward to subsequent years.</li>
+            <li>Minimum reimbursement claim amount must be greater than ₹200; lower bills must be clubbed.</li>
+            <li>Duplicate claims for the same bill will be rejected including by spouses/common insured members.</li>
+            <li>The Company reserves the right to reject claims if the provider is blacklisted on the platform.</li>
+            <li>Inflated bills/medicines will be curtailed to Reasonable and Customary charges.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="tnc2-section">
+      <div class="tnc2-head">Part C — General Guidelines</div>
+      <div class="tnc2-grid">
+
+        <div class="tnc2-blk">
+          <h4>C.1 Acceptable Age Band</h4>
+          <p><strong>E:</strong> 18–65 years &nbsp;|&nbsp; <strong>ES:</strong> 18–65 years</p>
+          <p><strong>ESC:</strong> Employee/Spouse 18–65; Children 0–25 years</p>
+          <p><strong>ESCP:</strong> Employee/Spouse/Children as above; Parents/Parents-in-law 0–85 years</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>C.2 Endorsement Terms</h4>
+          <p><strong>Additions:</strong> Midterm additions allowed for natural additions only, intimated within 45 days. Premium charged in full — no pro-rating. Effective from date of addition, not policy inception.</p>
+          <p><strong>Deletions:</strong> Pro-rata refund for entire family on deletion, subject to nil claims. Intimation must be immediate on finalisation of last working day.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>C.3 Cancellation / Termination</h4>
+          <p>15 days written notice required. Refund scale (subject to nil claims):</p>
+          <p>Up to 1 month: <strong>75%</strong> &nbsp;|&nbsp; Up to 3 months: <strong>50%</strong> &nbsp;|&nbsp; Up to 6 months: <strong>25%</strong> &nbsp;|&nbsp; Beyond 6 months: <strong>0%</strong></p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>C.4 Fraud &amp; Misrepresentation</h4>
+          <p>Fraudulent claims or false statements will result in forfeiture of all benefits and premium paid. Amounts already paid must be repaid. Policy may be cancelled. This includes misrepresentation, concealment or any act fitted to deceive.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tnc2-section">
+      <div class="tnc2-head">Annexure — Supporting Details</div>
+      <div class="tnc2-grid">
+
+        <div class="tnc2-blk">
+          <h4>C.1 Chronic Disease Coverage (if applicable)</h4>
+          <p>Diabetes mellitus/insipidus, Hypertension, COPD, Arthritis/Osteoarthritis/Rheumatoid arthritis, Hyper/Hypothyroidism, Bronchitis, Epilepsy, Migraine, Heart disease/Angina, Hypercholesterolemia, Asthma, Anaemia.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>C.2 Claim Documentation Required</h4>
+          <p><strong>Consultation:</strong> Prescription + invoice/receipt &nbsp;|&nbsp; <strong>Diagnostics:</strong> Reports + invoice + doctor's advice &nbsp;|&nbsp; <strong>Pharmacy:</strong> Invoice + prescription &nbsp;|&nbsp; <strong>Dental:</strong> Dental prescription + X-rays + invoice &nbsp;|&nbsp; <strong>Vaccination:</strong> Certificate + invoice &nbsp;|&nbsp; <strong>Vision:</strong> Ophthalmologist prescription + invoice</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>C.3 Document Standards</h4>
+          <p>Prescriptions must carry doctor's registration number and line of treatment. Chemist bills must include GSTIN and Drug Licence Number. Lab reports must be signed by a Pathologist. Diagnostic bills must carry GSTIN and doctor's referral. Blank documents with only signature/stamp are inadmissible.</p>
+        </div>
+
+        <div class="tnc2-blk">
+          <h4>C.4 Invasive Tests (Excluded from Diagnostics)</h4>
+          <p>USG/CT/MRI guided biopsies; endoscopic biopsies; upper GI endoscopy; colonoscopy with biopsy; diagnostic laparoscopy; hysteroscopy; cystoscopy with biopsy; bronchoscopy with biopsy; CT angiography; coronary angiography; lumbar puncture; liquid biopsy; pleural procedures; lymph node biopsy and similar invasive procedures.</p>
+        </div>
+
+        <div class="tnc2-blk" style="grid-column:span 2">
+          <h4>C.5 Acceptable Doctor Qualifications</h4>
+          <p>GP: MBBS &nbsp;|&nbsp; AYUSH: BHMS/BAMS/BUMS/BSMS/BNYS &nbsp;|&nbsp; Medicine: MD/DNB &nbsp;|&nbsp; Cardiology: DM/DNB/MS &nbsp;|&nbsp; Gynaecology: DGO/MS/MD/DNB &nbsp;|&nbsp; Dentistry: BDS/MDS &nbsp;|&nbsp; Neurology: MD/MS/DNB &nbsp;|&nbsp; Nephrology: DM/DNB &nbsp;|&nbsp; Urology: MCh/DNB &nbsp;|&nbsp; Orthopaedics: MS/DNB &nbsp;|&nbsp; Paediatrics: DCH/DNB/MD &nbsp;|&nbsp; Oncology: DM/DNB/MCh/PhD &nbsp;|&nbsp; ENT: MS &nbsp;|&nbsp; Dermatology: MD &nbsp;|&nbsp; Psychiatry: MD &nbsp;|&nbsp; General Surgery: MS/DNB</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PHC Package Inclusions — Last Page after T&C -->
+<div id="phc-dynamic-section"></div>
+
+<div class="qfoot">
+      This quote is valid for 30 days from the date of issue. &nbsp;|&nbsp;
+      Quote is valid subject to OPD being Fresh and not having any prior experience either as Insurance / Self Fund / Non-Insurance model including Health Checkup. &nbsp;|&nbsp;
+      Bajaj Finserv Health Ltd.
+    </div>
+
+  </div><!-- /quote-doc -->
+</div><!-- /quote-output -->
+
+</div><!-- /wrap -->
+
+<div class="sfoot">Bajaj Health — WCP 2.0 OPD Pricing Portal &nbsp;|&nbsp; © 2025 Bajaj Finserv Health Ltd.</div>
+
+<script>
+// ═══════════════════════════════════════
+//  RATE MASTER
+// ═══════════════════════════════════════
+const R = {
+  ADDITIVE:{
+    COMPULSORY:{
+      E:   {5000:1099,10000:2199,15000:3299,20000:4399,25000:5599,30000:6899},
+      ESC: {5000:1299,10000:2599,15000:3999,20000:5299,25000:6899,30000:8599},
+      ESCP:{5000:1499,10000:2999,15000:4599,20000:6399,25000:8599,30000:10999}
+    },
+    VOLUNTARY:{
+      E:{10:{5000:2109,10000:4026,15000:6403,20000:10018,25000:13337,30000:16966},20:{5000:1971,10000:3763,15000:5984,20000:9362,25000:12464,30000:15856},30:{5000:1873,10000:3575,15000:5685,20000:8894,25000:11841,30000:15064},50:{5000:1760,10000:3360,15000:5344,20000:8361,25000:11131,30000:14160}},
+      ESC:{10:{5000:2481,10000:4737,15000:7533,20000:11691,25000:15596,30000:19866},20:{5000:2319,10000:4427,15000:7040,20000:10926,25000:14576,30000:18566},30:{5000:2203,10000:4205,15000:6688,20000:10380,25000:13847,30000:17638},50:{5000:2071,10000:3953,15000:6287,20000:9757,25000:13016,30000:16580}},
+      ESCP:{10:{5000:2820,10000:5433,15000:8808,20000:12987,25000:17188,30000:22304},20:{5000:2635,10000:5030,15000:8156,20000:12025,25000:15915,30000:20652},30:{5000:2504,10000:4779,15000:7748,20000:11424,25000:15119,30000:19619},50:{5000:2353,10000:4492,15000:7283,20000:10738,25000:14212,30000:18442}}
+    }
+  },
+  FUNGIBLE:{
+    COMPULSORY:{
+      '100-300':{E:{5000:2199,10000:4199,15000:6199,20000:8799,25000:10699,30000:12399},ESC:{5000:2599,10000:4899,15000:7499,20000:10599,25000:12899,30000:15399},ESCP:{5000:2899,10000:5599,15000:8699,20000:12399,25000:15599,30000:18999}},
+      '301-500':{E:{5000:2099,10000:3999,15000:5999,20000:8499,25000:10299,30000:11999},ESC:{5000:2499,10000:4699,15000:7199,20000:10199,25000:12499,30000:14899},ESCP:{5000:2799,10000:5399,15000:8399,20000:11999,25000:15099,30000:18399}},
+      '501-1000':{E:{5000:2049,10000:3999,15000:5899,20000:8399,25000:10099,30000:11799},ESC:{5000:2449,10000:4699,15000:7099,20000:9999,25000:12299,30000:14699},ESCP:{5000:2749,10000:5299,15000:8299,20000:11799,25000:14799,30000:18099}},
+      '1001-2000':{E:{5000:1999,10000:3899,15000:5799,20000:8299,25000:9999,30000:11599},ESC:{5000:2399,10000:4599,15000:6999,20000:9899,25000:12099,30000:14399},ESCP:{5000:2699,10000:5249,15000:8199,20000:11599,25000:14599,30000:17799}}
+    }
+  },
+  OPEN:{
+    COMPULSORY:{
+      '100-500':{E:{5000:1900,10000:5020,15000:7300,20000:9440,25000:11450,30000:13320},ESC:{5000:2470,10000:6120,15000:8900,20000:11630,25000:14250,30000:16750},ESCP:{5000:2780,10000:6950,15000:10230,20000:13370,25000:16380,30000:19260}},
+      '501-1000':{E:{5000:1830,10000:4830,15000:7020,20000:9070,25000:11000,30000:12800},ESC:{5000:2380,10000:5880,15000:8550,20000:11170,25000:13690,30000:16090},ESCP:{5000:2680,10000:6680,15000:9830,20000:12840,25000:15730,30000:18500}},
+      '1001-2000':{E:{5000:1760,10000:4630,15000:6730,20000:8690,25000:10540,30000:12270},ESC:{5000:2280,10000:5640,15000:8200,20000:10710,25000:13120,30000:15430},ESCP:{5000:2570,10000:6410,15000:9420,20000:12310,25000:15080,30000:17730}}
+    }
+  },
+  FUNGIBLE_SMALL:{COMPULSORY:{E:{5000:1499,10000:3449},ESC:{5000:1749,10000:3649},ESCP:{5000:2249,10000:4349}}},
+  SMALL_TICKET:{COMPULSORY:{E:{basic:199,bronze:289,silver:599,gold:1199},ESC:{basic:299,bronze:399,silver:699,gold:1299},ESCP:{basic:349,bronze:499,silver:799,gold:1499}}}
+};
+
+const WPLAN={5000:'Basic',10000:'Bronze',15000:'Silver',20000:'Gold',25000:'Platinum',30000:'Platinum Plus'};
+const PBADGE={Basic:'pb-basic',Bronze:'pb-bronze',Silver:'pb-silver',Gold:'pb-gold',Platinum:'pb-plat','Platinum Plus':'pb-platpp'};
+
+// ═══════════════════════════════════════
+//  PRODUCT CONSTRUCTS
+// ═══════════════════════════════════════
+function construct(prod, w){
+  w=parseInt(w);
+  const i=[5000,10000,15000,20000,25000,30000].indexOf(w);
+  if(prod==='ADDITIVE'){
+    const tele=['₹5,000 (GP Only)','₹10,000 (GP Only)','₹15,000 (All Speciality)','Unlimited — All Speciality','Unlimited — All Speciality','Unlimited — All Speciality'];
+    const doc=[2000,4000,6000,8000,10000,12000],lab=[1000,2000,3000,4000,5000,6000],ph=[500,1000,1500,2000,2500,3000];
+    const den=[1000,2000,3000,4000,5000,6000],vis=[500,1000,1500,2000,2500,3000];
+    const vac=['-',1000,1000,1500,2000,2500],proc=['-','-',1000,2000,4000,6000];
+    const phc=['Not Covered','1 Classic Voucher ₹2,500 (Emp)','1 Classic Voucher ₹2,500 (Emp)','2 Classic Vouchers ₹2,500 (Emp+1)','2 Silver Vouchers ₹3,500 (Emp+1)','2 Silver Vouchers ₹3,500 (Emp+1)'];
+    const gym=['—','—','—','Upto 40 Sessions (Emp)','Upto 50 Sessions (Emp)','Upto 60 Sessions (Emp)'];
+    return[
+      {s:1,b:`OPD Wallet Benefits`,l:`₹${w.toLocaleString('en-IN')}`},
+      {b:'Tele Consultation',m:'cl',l:tele[i]},
+      {b:'Doctor Consultation (In-clinic)',m:'cl',l:'₹'+doc[i].toLocaleString('en-IN')},
+      {b:'Prescribed Lab & Radiology',m:'cl',l:'₹'+lab[i].toLocaleString('en-IN')},
+      {b:'Prescribed Pharmacy',m:'cl',l:'₹'+ph[i].toLocaleString('en-IN')},
+      {b:'Dental',m:'bt',l:'₹'+den[i].toLocaleString('en-IN')},
+      {b:'Vision',m:'ri',l:'₹'+vis[i].toLocaleString('en-IN')},
+      {b:'WHO Approved Vaccinations',m:'bt',l:vac[i]==='-'?'Not Covered':'₹'+vac[i].toLocaleString('en-IN')},
+      {b:'OPD Procedures',m:'ri',l:proc[i]==='-'?'Not Covered':'₹'+proc[i].toLocaleString('en-IN')},
+      {b:'Preventive Health Checkup',m:'cl',l:phc[i]},
+      {s:1,b:'Wellness Wallet (Over & Above OPD Wallet)',l:`₹${w.toLocaleString('en-IN')}`},
+      {b:'Dietician / Nutritionist Consultations',m:'cl',l:'Included — Worth ₹500 per session'},
+      {b:'Mental Wellness Sessions (Employee)',m:'cl',l:'Included — Worth ₹1,000 per session'},
+      {b:'Quit Smoking Program',m:'vo',l:i>0?'Included — Worth ₹2,000':'—'},
+      {b:'Gym Session Access (Employee Only)',m:'cl',l:gym[i]==='—'?'—':gym[i]+' — Worth ₹350 per session | Total upto ₹2,000'},
+      {s:1,b:'Value Added Services — Bajaj Health App',l:'Complementary'},
+      {b:'Smart Digital Face Scan (Know Your Vitals)',m:'cl',l:'4 Vouchers × ₹250 each — Total ₹1,000 (Cashless)'},
+      {b:'Health Risk Assessment',m:'cl',l:'Included'},
+      {b:'Step Tracker & Activity Contests',m:'cl',l:i>0?'Included':'—'},
+      {b:'Managed Care Programs',m:'cl',l:'Discounted upto 40% (Chronic Disease / Specialist Programs)'},
+      {b:'Network Discounting',m:'cl',l:'Available on Lab, Consultation & Pharmacy'},
+    ];
+  }
+  if(prod==='FUNGIBLE'){
+    const tele=w<=5000?'24 Sessions/yr (2/month, GP)':w<=10000?'36 Sessions/yr (All Speciality)':'Unlimited (All Speciality)';
+    const phc=w<=10000?'1 Classic Voucher ₹2,500 (Emp)':w<=20000?'2 Classic Vouchers ₹2,500 (Emp+1)':'2 Silver Vouchers ₹3,500 (Emp+1)';
+    return[
+      {s:1,b:'OPD Wallet Benefits',l:`₹${w.toLocaleString('en-IN')}`},
+      {b:'Tele Consultation',m:'cl',l:tele},
+      {b:'Doctor Consultation (In-clinic)',m:'bt',l:`₹${w.toLocaleString('en-IN')} (100% of SI)`},
+      {b:'Prescribed Lab & Radiology',m:'cl',l:`₹${(w*.5).toLocaleString('en-IN')} (50% of SI)`},
+      {b:'Prescribed Pharmacy',m:'cl',l:`₹${(w*.25).toLocaleString('en-IN')} (25% of SI)`},
+      {b:'Dental',m:'bt',l:`₹${(w*.4).toLocaleString('en-IN')} (40% of SI)`},
+      {b:'Vision',m:'ri',l:`₹${(w*.4).toLocaleString('en-IN')} (40% of SI)`},
+      {b:'WHO Approved Vaccinations',m:'bt',l:`₹${(w*.2).toLocaleString('en-IN')} (20% of SI)`},
+      {b:'OPD Procedures',m:'ri',l:`₹${(w*.5).toLocaleString('en-IN')} (50% of SI)`},
+      {b:'Preventive Health Checkup',m:'cl',l:phc},
+      {s:1,b:'Wellness Wallet (Over & Above OPD Wallet)',l:`₹${w.toLocaleString('en-IN')}`},
+      {b:'Dietician / Nutritionist Consultations',m:'cl',l:'Included — Worth ₹500 per session'},
+      {b:'Mental Wellness Sessions (Employee)',m:'cl',l:'Included — Worth ₹1,000 per session'},
+      {b:'Quit Smoking Program',m:'vo',l:w>=10000?'Included — Worth ₹2,000':'—'},
+      {b:'Gym Session Access (Employee Only)',m:'cl',l:w>=20000?'Upto 40–80 Sessions — Worth ₹350/session | Total upto ₹2,000':'—'},
+      {s:1,b:'Value Added Services — Bajaj Health App',l:'Complementary'},
+      {b:'Smart Digital Face Scan (Know Your Vitals)',m:'cl',l:'4 Vouchers × ₹250 each — Total ₹1,000 (Cashless)'},
+      {b:'Health Risk Assessment',m:'cl',l:'Included'},
+      {b:'Step Tracker & Activity Contests',m:'cl',l:w>=10000?'Included':'—'},
+      {b:'Managed Care Programs',m:'cl',l:'Discounted upto 40% (Chronic Disease / Specialist Programs)'},
+      {b:'Network Discounting',m:'cl',l:w<=5000?'10% on Lab':'20–25% on Lab | 10–15% on Consult | 10–12% on Pharma'},
+    ];
+  }
+  if(prod==='OPEN'){
+    const phc=w<=10000?'1 Classic Voucher ₹2,500 (Emp)':w<=20000?'2 Classic Vouchers ₹2,500 (Emp+1)':'2 Silver/Gold Vouchers (Emp+1)';
+    return[
+      {s:1,b:'OPD Wallet Benefits',l:`₹${w.toLocaleString('en-IN')}`},
+      {b:'Tele Consultation',m:'cl',l:'Upto SI'},
+      {b:'Doctor Consultation (In-clinic)',m:'bt',l:'Upto SI'},
+      {b:'Prescribed Lab & Radiology',m:'bt',l:'Upto SI'},
+      {b:'Prescribed Pharmacy',m:'cl',l:'Upto SI'},
+      {b:'Dental',m:'bt',l:'Upto SI'},
+      {b:'Vision',m:'bt',l:'Upto SI'},
+      {b:'WHO Approved Vaccinations',m:'bt',l:'Upto SI'},
+      {b:'OPD Procedures',m:'bt',l:'Upto SI'},
+      {b:'Preventive Health Checkup',m:'cl',l:phc},
+      {s:1,b:'Wellness Wallet (Over & Above OPD Wallet)',l:`₹${w.toLocaleString('en-IN')}`},
+      {b:'Dietician / Nutritionist Consultations',m:'cl',l:'Included — Worth ₹500 per session'},
+      {b:'Mental Wellness Sessions (Employee)',m:'cl',l:'Included — Worth ₹1,000 per session'},
+      {b:'Quit Smoking Program',m:'vo',l:w>=10000?'Included — Worth ₹2,000':'—'},
+      {b:'Gym Session Access (Employee Only)',m:'cl',l:w>=20000?'Upto 40–80 Sessions — Worth ₹350/session | Total upto ₹2,000':'—'},
+      {s:1,b:'Value Added Services — Bajaj Health App',l:'Complementary'},
+      {b:'Smart Digital Face Scan (Know Your Vitals)',m:'cl',l:'4 Vouchers × ₹250 each — Total ₹1,000 (Cashless)'},
+      {b:'Health Risk Assessment',m:'cl',l:'Included'},
+      {b:'Step Tracker & Activity Contests',m:'cl',l:w>=10000?'Included':'—'},
+      {b:'Managed Care Programs',m:'cl',l:'Discounted upto 40% (Chronic Disease / Specialist Programs)'},
+      {b:'Network Discounting',m:'cl',l:'25% on Lab | 15% on Consult | 12% on Pharma'},
+    ];
+  }
+  if(prod==='FUNGIBLE_SMALL'){
+    return[
+      {s:1,b:'OPD Wallet Benefits',l:`OPD SI: ₹${w.toLocaleString('en-IN')}`},
+      {b:'Tele Consultation',m:'cl',l:'100% of SI'},
+      {b:'In-clinic Doctor Consultation',m:'bt',l:'50% of SI'},
+      {b:'Prescribed Diagnostics',m:'cl',l:'30% of SI'},
+      {b:'Dental OPD',m:'bt',l:'20% of SI'},
+      {b:'Vision OPD',m:'bt',l:'20% of SI'},
+      {b:'Prescribed Pharmacy',m:'cl',l:'10% of SI'},
+      {b:'PHC Voucher (Employee)',m:'cl',l:w===5000?'1 Essential Voucher ₹1,000':'1 Classic Voucher ₹2,000'},
+      {s:1,b:'Wellness Wallet (Over & Above OPD Wallet)',l:`₹${w.toLocaleString('en-IN')}`},
+      {b:'Diet & Nutritional Consultation',m:'cl',l:'Included (Upto Wellness SI)'},
+      {b:'Mental / Emotional Wellness Session',m:'cl',l:'Included (Upto Wellness SI)'},
+      {b:'Quit Smoking Voucher',m:'vo',l:'1 Voucher (₹2,000)'},
+      {b:'Online Fitness Session Access',m:'cl',l:w===5000?'—':'1 Voucher (₹2,000)'},
+      {s:1,b:'App Features & Value Added Services',l:'Complementary'},
+      {b:'Smart Digital Face Scan (Know Your Vitals)',m:'cl',l:'4 Vouchers × ₹250 each — Total ₹1,000 (Cashless)'},
+      {b:'Step Tracker',m:'cl',l:'Included'},
+      {b:'Health Risk Assessment',m:'cl',l:'Included'},
+      {b:'Managed Care Programs',m:'cl',l:'Discounted upto 40% (Chronic Disease / Specialist Programs)'},
+      {b:'Network Discounting',m:'cl',l:w===5000?'Upto 20%':'Upto 30%'},
+    ];
+  }
+  if(prod==='SMALL_TICKET'){
+    const stPlan = w<=5000?'Basic':w<=10000?'Bronze':w<=15000?'Silver':'Gold';
+    return[
+      {s:1,b:`Digital OPD Benefits — ${stPlan} Plan`,l:''},
+
+      // Cashless Digital Benefits
+      {b:'Tele Consultation',m:'cl',
+        l:w<=5000?'12 Sessions/yr (1/Month) — GP Only':
+          w<=10000?'24 Sessions/yr (2/Month) — GP Only':
+          w<=15000?'36 Sessions/yr (3/Month) — 20+ Specialities':
+                   'Unlimited — 20+ Specialities'},
+      {b:'Diet & Nutritional Consultation',m:'cl',
+        l:w<=5000?'12 Sessions/yr':
+          w<=10000?'18 Sessions/yr':
+          w<=15000?'24 Sessions/yr':
+                   'Unlimited'},
+      {b:'Mental / Emotional Wellness Session',m:'cl',
+        l:w<=5000?'4 Sessions/yr':
+          w<=10000?'8 Sessions/yr':
+          w<=15000?'15 Sessions/yr':
+                   'Unlimited'},
+      ...(w>=15000?[{b:'Online Fitness Session (Employee Only)',m:'cl',l:'Unlimited'}]:[]),
+
+      // Voucher-Based Benefits
+      {s:1,b:'Voucher-Based Benefits',l:''},
+      ...(w>=15000?[{b:'PHC Voucher (Employee Only)',m:'cl',
+        l:w<=15000?'1 AHC Voucher — Essential Package (4 Test Groups)':
+                   '1 AHC Voucher — PHC 82 Tests (5 Test Groups)'}]:[]),
+      ...(w>=10000?[{b:'Dental OPD Voucher',m:'vo',
+        l:w<=10000?'₹1,000':
+          w<=15000?'₹1,500':
+                   '₹3,000 (₹1,500 × 2 Vouchers)'}]:[]),
+      ...(w>=15000?[{b:'Prescribed Diagnostics Voucher',m:'vo',
+        l:w<=15000?'₹1,500':
+                   '₹2,000 (₹1,000 × 2 Vouchers)'}]:[]),
+      ...(w>=10000?[{b:'Quit Smoking Voucher',m:'vo',
+        l:w<=15000?'1 Voucher':
+                   '2 Vouchers'}]:[]),
+
+      // Digital Features & VAS
+      {s:1,b:'Digital Features & Value Added Services',l:'Complementary'},
+      {b:'Step Tracker',m:'cl',l:'Included — All Plans'},
+      ...(w>=10000?[{b:'Health Coin Rewards (App Activities)',m:'cl',l:'Included'}]:[]),
+      {b:'Health Risk Assessment',m:'cl',l:'Included — All Plans'},
+      {b:'Smart Digital Face Scan (Know Your Vitals)',m:'cl',l:'4 Vouchers × ₹250 each — Total ₹1,000 (Cashless)'},
+      {b:'Managed Care Programs',m:'cl',l:'Discounted upto 40% (Chronic Disease / Specialist Programs)'},
+    ];
+  }
+  return[];
+}
+
+// ═══════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════
+const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+function modeHtml(m){
+  return{cl:'<span class="mb mb-cl">Cashless</span>',ri:'<span class="mb mb-ri">Reimbursement</span>',bt:'<span class="mb mb-bt">Cashless + Reimbursement</span>',vo:'<span class="mb mb-vo">Voucher</span>'}[m]||'—';
+}
+function fBand(e){if(e<=300)return'100-300';if(e<=500)return'301-500';if(e<=1000)return'501-1000';return'1001-2000';}
+function oBand(e){if(e<=500)return'100-500';if(e<=1000)return'501-1000';return'1001-2000';}
+function expiryDate(){const d=new Date();d.setDate(d.getDate()+30);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});}
+
+
+
+
+// ═══════════════════════════════════════
+//  PHC PACKAGE ENGINE (Change 2)
+// ═══════════════════════════════════════
+
+// Map product + wallet → relevant PHC package tier
+function getPHCPackage(prod, wallet) {
+  const w = parseInt(wallet);
+  if (prod === 'ADDITIVE') {
+    if (w <= 5000)  return null;          // Not Covered
+    if (w <= 20000) return 'classic';     // Bronze/Silver/Gold: Classic voucher
+    return 'silver';                      // Platinum/Platinum Plus: Silver voucher
+  }
+  if (prod === 'FUNGIBLE') {
+    if (w <= 20000) return 'classic';
+    return 'silver';
+  }
+  if (prod === 'OPEN') {
+    if (w <= 20000) return 'classic';
+    return 'silver';
+  }
+  if (prod === 'FUNGIBLE_SMALL') {
+    return w <= 5000 ? 'essential' : 'classic';
+  }
+  if (prod === 'SMALL_TICKET') {
+    // Basic/Bronze: no PHC; Silver: Essential package; Gold: PHC 82 Tests
+    if (w <= 10000) return null;
+    return w <= 15000 ? 'essential' : 'phc82';
+  }
+  return null;
+}
+
+// PHC test data per package
+const PHC_DATA = {
+  essential: {
+    label: 'Essential Package — 4 Test Groups',
+    rows: [
+      ['CBC (25 Parameters)', 'Absolute Basophils Count, Absolute Eosinophil Count, Absolute Lymphocyte Count, Absolute Monocyte Count, Absolute Neutrophil Count, Basophils, Eosinophils, Hemoglobin (Hb), Lymphocytes, MCH, MCHC, MCV, MENTZER INDEX (MCV/RCC), Monocytes, MPV (Mean Platelet Volume), Neutrophils, PCV (Haematocrit), Platelet Count (Thrombocyte count), RBC Count, RDW-CV, RDW (Red Cell Distribution Width), WBC Total Counts (Leucocytes)'],
+      ['Diabetic Profile',    'Fasting Blood Sugar'],
+      ['Lipid Profile',       'Serum Cholesterol'],
+      ['Kidney Function Tests','Serum Creatinine'],
+    ]
+  },
+  phc82: {
+    label: 'PHC 82 Tests — 5 Test Groups',
+    rows: [
+      ['Haemogram — CBC + ESR (27 Parameters)', 'Blood Absolute Basophils Count, Blood Absolute Eosinophil Count, Blood Absolute Lymphocyte Count, Blood Absolute Monocyte Count, Blood Absolute Neutrophil Count, Basophils, Eosinophils, ESR (Automated), Hemoglobin (Hb), Lymphocytes, MCH, MCHC, MCV, MENTZER INDEX (MCV/RCC), Monocytes, MPV (Mean Platelet Volume), Neutrophils, PCT, PCV (Haematocrit), PDW (Platelet Distribution Width), Platelet Count (Thrombocyte count), P-LCC, P-LCR, RBC Count, RDW-CV, RDW (Red Cell Distribution Width), WBC Total Counts (Leucocytes)'],
+      ['Kidney Function Test — KFT (11 Parameters)', 'Blood Urea, BUN, BUN/Creatinine Ratio, Calcium, Chloride, Creatinine, Phosphorus, Potassium, Sodium, Urea/Creatinine Ratio, Uric Acid'],
+      ['Lipid Profile (9 Parameters)', 'Cholesterol Total Serum, CHOL/HDL Ratio, HDL Cholesterol Direct, HDL/LDL Cholesterol Ratio, LDL Cholesterol Calculated, LDL/HDL Ratio, Non-HDL Cholesterol Serum, Triglycerides Serum, VLDL'],
+      ['Liver Function Test — LFT (12 Parameters)', 'A/G Ratio, Albumin Serum, Alkaline Phosphatase Serum, Bilirubin Direct Serum, Bilirubin Indirect Serum, Bilirubin Total Serum, GGTP (Gamma GT), Globulin, Proteins Serum, SGOT/AST, SGOT/SGPT Ratio, SGPT/ALT'],
+      ['Urine Routine & Microscopic Examination (23 Parameters)', 'Albumin, Amorphous Deposits, Bacteria, Bilirubin, Blood, Cast, Colour, Crystals, Deposit, Epithelial Cells, Leucocyte Esterase, Nitrate, pH Urine, Protozoa, Pus Cells (Leukocytes), Red Blood Cells, Specific Gravity, Sugar, Transparency, Urine Ketones, Urobilinogen, Volume, Yeast Cells'],
+    ]
+  },
+  classic: {
+    label: 'Classic Package (₹2,500)',
+    rows: [
+      ['Hemogram',          'Complete Hemogram (25 parameters) including all CBC indices, MCHC, RDW, Haematocrit, Platelet Count, Total Leucocytes Count'],
+      ['ESR',               'Erythrocyte Sedimentation Rate'],
+      ['Liver Function Test','Albumin, Bilirubin (Total/Direct/Indirect), Globulin, GGTP, Alkaline Phosphatase, SGOT/AST, SGPT/ALT, A/G Ratio, Serum Proteins'],
+      ['Urine Routine',     'Colour, Leucocytes, Epithelial Cells, Crystals, Ketone, Urobilinogen, Glucose, Protein, Blood'],
+      ['Diabetic Profile',  'Fasting Blood Sugar + HbA1C'],
+      ['Lipid Profile',     'Total Cholesterol, Triglycerides, HDL/LDL/VLDL, Non-HDL Cholesterol, LDL:HDL & CHOL:HDL Ratios'],
+      ['Kidney Function',   'Blood Urea Nitrogen (BUN) + Creatinine Serum'],
+      ['Thyroid Profile',   'T3 (Total Triiodothyronine), T4 (Total Thyroxine), TSH (Ultra-sensitive)'],
+      ['Bone Health',       'Calcium'],
+    ]
+  },
+  silver: {
+    label: 'Silver Package (₹3,500)',
+    rows: [
+      ['Hemogram',               'Complete Hemogram (25 parameters) including all CBC indices + ESR'],
+      ['Diabetic Profile',       'Fasting Blood Sugar + HbA1C'],
+      ['Lipid Profile',          'Total Cholesterol, Triglycerides, HDL/LDL/VLDL, Non-HDL, LDL:HDL & CHOL:HDL Ratios'],
+      ['Liver Function Test',    'Bilirubin Total/Direct/Indirect, Albumin, Globulin, SGOT, SGPT, Alkaline Phosphatase, GGT, Total Protein'],
+      ['Kidney Function Test',   'Calcium, Uric Acid, Creatinine, BUN, BUN:Creatinine Ratio'],
+      ['Thyroid Profile',        'TSH, T3 (Total), T4 (Total)'],
+      ['Complete Urine Analysis','Crystals, Leucocytes, Urobilinogen, Colour, Epithelial Cells, Protein, Ketone, Blood, Glucose'],
+      ['Vitamin B12',            'Cyanocobalamin (Vitamin B12)'],
+      ['Vitamin D',              'Vitamin D Total — 25 Hydroxy'],
+      ['Iron Deficiency',        'Total Iron Binding Capacity (TIBC), % Transferrin Saturation, Iron'],
+      ['Stool Examination',      'Routine & Microscopy: Colour, Consistency, Mucus, Blood, Pus Cells, RBC, Cysts, Parasites, OVA'],
+      ['Inflammation Marker',    'Hs CRP (High-Sensitivity C-Reactive Protein)'],
+    ]
+  },
+  gold: {
+    label: 'Gold Package (₹6,000)',
+    rows: [
+      ['Hemogram',               'Complete Hemogram (25 parameters) + ESR'],
+      ['Diabetic Profile',       'Fasting Blood Sugar + HbA1C'],
+      ['Lipid Profile',          'Total Cholesterol, Triglycerides, HDL/LDL/VLDL, Non-HDL, LDL:HDL & CHOL:HDL Ratios'],
+      ['Liver Function Test',    'Bilirubin Total/Direct/Indirect, Albumin, Globulin, SGOT, SGPT, Alkaline Phosphatase, GGT, Total Protein'],
+      ['Kidney Function Test',   'Calcium, Uric Acid, Creatinine, BUN, BUN:Creatinine Ratio'],
+      ['Thyroid Profile',        'TSH, T3 (Total), T4 (Total)'],
+      ['Complete Urine Analysis','Crystals, Leucocytes, Urobilinogen, Colour, Epithelial Cells, Protein, Ketone, Blood, Glucose'],
+      ['Vitamin B12',            'Cyanocobalamin (Vitamin B12)'],
+      ['Vitamin D',              'Vitamin D Total — 25 Hydroxy'],
+      ['Iron Deficiency',        'Total Iron Binding Capacity (TIBC), % Transferrin Saturation, Iron'],
+      ['Stool Examination',      'Routine & Microscopy: Colour, Consistency, Mucus, Blood, Pus Cells, RBC, Cysts, Parasites, OVA'],
+      ['Inflammation Marker',    'Hs CRP (High-Sensitivity C-Reactive Protein)'],
+      ['Imaging & ECG',          'USG Whole Abdomen + Electrocardiogram (ECG) + Chest X-Ray'],
+      ['Gender Specific (F)',    'Pap Smear (Female members only)'],
+    ]
+  }
+};
+
+function renderPHC(packageTier, prod) {
+  const el = document.getElementById('phc-dynamic-section');
+  if (!packageTier || !PHC_DATA[packageTier]) {
+    el.innerHTML = '';
+    return;
+  }
+  const pkg = PHC_DATA[packageTier];
+  const rows = pkg.rows.map((r,i) =>
+    `<tr><td class="phc-cat">${r[0]}</td><td>${r[1]}</td></tr>`
+  ).join('');
+
+  el.innerHTML = `
+    <div class="phc-section">
+      <div class="phc-head">Preventive Health Checkup — Included Package: ${pkg.label}</div>
+      ${prod !== 'SMALL_TICKET' ? `<div style="font-size:.72rem;color:var(--navy);font-weight:600;padding:4px 13px 6px;background:#f0f4ff;border-bottom:1px solid #dbe4f8">
+        ✓ PHC Voucher is Wallet Deductible — utilised amount is deducted from OPD Wallet SI.
+      </div>` : ''}
+      <table class="phc-table">
+        <thead><tr>
+          <th style="width:28%">Test Category</th>
+          <th>Tests / Parameters Included</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+//  WELLNESS WALLET TOGGLE (Item 1)
+// ═══════════════════════════════════════
+let wellnessMode = 'with'; // 'with' or 'without'
+
+function setWellness(mode) {
+  wellnessMode = mode;
+  document.getElementById('wt-with').classList.toggle('wsel', mode==='with');
+  document.getElementById('wt-without').classList.toggle('wsel', mode==='without');
+  const note = document.getElementById('well-disc-note');
+  note.classList.toggle('show', mode==='without');
+  onCommChange(); // refresh preview
+}
+
+function applyWellnessDiscount(rate) {
+  if (wellnessMode === 'without') {
+    const discount = Math.max(50, Math.min(200, Math.round(rate * 0.015)));
+    return Math.max(0, rate - discount);
+  }
+  return rate;
+}
+
+// ═══════════════════════════════════════
+//  PER-FAMILY RATE PREVIEW (Item 10)
+// ═══════════════════════════════════════
+function showFamilyRates() {
+  const cov  = document.getElementById('f-coverage').value;
+  const part = document.getElementById('f-part').value;
+  const wal  = document.getElementById('f-wallet').value;
+  const emp  = parseInt(document.getElementById('f-emp').value)||0;
+  const panel = document.getElementById('fam-rate-panel');
+
+  if(!selProd||!cov||!wal||!emp) {
+    alert('Please fill in: Number of Employees, Coverage Type, Wallet SI and select a Product Structure first.');
+    return;
+  }
+  if(!validateCommercials()) return;
+
+  const {brok,ins,opex}=getCommercials();
+  const families = ['E','ESC','ESCP'];
+  const ids = ['fr-e','fr-esc','fr-escp'];
+  let selFam = document.getElementById('f-family').value;
+  let selRate = null;
+
+  families.forEach((fam,fi) => {
+    const base = resolveRate(selProd,cov,fam,wal,part,emp);
+    if(base==null){ document.getElementById(ids[fi]).textContent='N/A'; return; }
+    const risk = extractRiskCost(base);
+    const adj  = applyCommercials(risk,brok,ins,opex);
+    const final = Math.round(applyWellnessDiscount(adj));
+    document.getElementById(ids[fi]).textContent = fmt(final) + ' / emp';
+    if(fam===selFam) selRate = final;
+  });
+
+  // Totals using selected family (or E if not selected)
+  if(!selFam) selFam='E';
+  if(selRate===null){
+    const base=resolveRate(selProd,cov,selFam,wal,part,emp);
+    if(base){const risk=extractRiskCost(base);const adj=applyCommercials(risk,brok,ins,opex);selRate=Math.round(applyWellnessDiscount(adj));}
+  }
+  if(selRate){
+    const net=selRate*emp;
+    const gross=Math.round(net*1.18);
+    document.getElementById('fr-net').textContent=fmt(net);
+    document.getElementById('fr-gross').textContent=fmt(gross);
+  }
+  panel.classList.add('show');
+}
+
+// ═══════════════════════════════════════
+//  EDIT QUOTE — go back with inputs preserved (Item 11)
+// ═══════════════════════════════════════
+function editQuote() {
+  document.getElementById('quote-output').classList.remove('show');
+  document.getElementById('input-section').style.display='block';
+  // DO NOT call resetForm() — all inputs stay as-is
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+//  COMMERCIAL ADJUSTMENT ENGINE
+// ═══════════════════════════════════════
+const EMBEDDED_OPEX    = 0.15;   // embedded in base rate
+const EMBEDDED_LOADING = 0.10;   // 7.5% brok + 2.5% ins embedded in base rate
+
+function extractRiskCost(baseRate) {
+  // Reverse out both embedded loadings from base rate
+  return baseRate * (1 - EMBEDDED_LOADING) * (1 - EMBEDDED_OPEX);
+}
+
+function applyCommercials(riskCost, brok, ins, opex) {
+  // New Rate = Risk Cost / (1 - OPEX) / (1 - (Brok + Ins))
+  const totalLoading = brok + ins;
+  if (totalLoading >= 1 || opex >= 1) return null;
+  return riskCost / (1 - opex) / (1 - totalLoading);
+}
+
+function getCommercials() {
+  const brok = parseFloat(document.getElementById('c-brok').value) / 100;
+  const ins  = parseFloat(document.getElementById('c-ins').value)  / 100;
+  const opex = parseFloat(document.getElementById('c-opex').value) / 100;
+  return { brok, ins, opex };
+}
+
+function validateCommercials() {
+  let ok = true;
+  const brok = parseFloat(document.getElementById('c-brok').value);
+  const ins  = parseFloat(document.getElementById('c-ins').value);
+  const opex = parseFloat(document.getElementById('c-opex').value);
+
+  // Reset errors
+  ['c-brok','c-ins','c-opex'].forEach(id => {
+    document.getElementById(id).classList.remove('cerr');
+  });
+  document.querySelectorAll('.ferr').forEach(e => e.classList.remove('show'));
+  document.getElementById('w-loading').classList.remove('show');
+
+  if (isNaN(brok) || brok < 0 || brok > 15) {
+    document.getElementById('c-brok').classList.add('cerr');
+    document.getElementById('e-brok').classList.add('show');
+    ok = false;
+  }
+  if (isNaN(ins) || ins < 0 || ins > 10) {
+    document.getElementById('c-ins').classList.add('cerr');
+    document.getElementById('e-ins').classList.add('show');
+    ok = false;
+  }
+  if (isNaN(opex) || opex < 10 || opex > 25) {
+    document.getElementById('c-opex').classList.add('cerr');
+    document.getElementById('e-opex').classList.add('show');
+    ok = false;
+  }
+  // Optional safeguard warning
+  if ((brok + ins) > 20) {
+    document.getElementById('w-loading').classList.add('show');
+  }
+  return ok;
+}
+
+function onCommChange() {
+  // Live preview of rate adjustment if inputs are partially filled
+  const brokV = parseFloat(document.getElementById('c-brok').value);
+  const insV  = parseFloat(document.getElementById('c-ins').value);
+  const opexV = parseFloat(document.getElementById('c-opex').value);
+  const preview = document.getElementById('rate-preview');
+  const rpVal = document.getElementById('rp-val');
+
+  if (brokV+insV > 20) document.getElementById('w-loading').classList.add('show');
+  else document.getElementById('w-loading').classList.remove('show');
+
+  // Can only preview if a rate was already selected (selProd set)
+  if (!selProd || !document.getElementById('f-wallet').value) {
+    preview.style.display = 'none';
+    return;
+  }
+  // Try to preview with current inputs
+  const wal   = document.getElementById('f-wallet').value;
+  const fam   = document.getElementById('f-family').value;
+  const cov   = document.getElementById('f-coverage').value;
+  const part  = document.getElementById('f-part').value;
+  const emp   = parseInt(document.getElementById('f-emp').value)||100;
+
+  if (!fam || !cov || !wal) { preview.style.display='none'; return; }
+
+  const baseRate = resolveRate(selProd, cov, fam, wal, part, emp);
+  if (!baseRate) { preview.style.display='none'; return; }
+
+  if (isNaN(brokV)||isNaN(insV)||isNaN(opexV)||brokV<0||insV<0||opexV<10||opexV>15||brokV>15||insV>10) {
+    preview.style.display='none'; return;
+  }
+
+  const riskCost = extractRiskCost(baseRate);
+  const newRate  = applyCommercials(riskCost, brokV/100, insV/100, opexV/100);
+  if (!newRate || newRate <= 0) { preview.style.display='none'; return; }
+
+  const newRateWell=applyWellnessDiscount(newRate);
+  rpVal.textContent = fmt(Math.round(newRateWell));
+  preview.style.display = 'flex';
+}
+
+// ═══════════════════════════════════════
+//  RATE RESOLVER
+// ═══════════════════════════════════════
+function resolveRate(prod,cov,fam,wal,part,emp){
+  const w=parseInt(wal);
+  try{
+    if(prod==='ADDITIVE'){return cov==='COMPULSORY'?R.ADDITIVE.COMPULSORY[fam][w]:R.ADDITIVE.VOLUNTARY[fam][parseInt(part)][w];}
+    if(prod==='FUNGIBLE'){return R.FUNGIBLE.COMPULSORY[fBand(emp)][fam][w];}
+    if(prod==='OPEN'){
+      const base=R.OPEN.COMPULSORY[oBand(emp)][fam][w];
+      if(!base) return null;
+      // 4% loading for E, 6% for ESC/ESCP — applicable only for 100–299 emp (new bracket)
+      if(emp < 300){
+        const load = fam==='E' ? 1.04 : 1.06;
+        return Math.round(base * load);
+      }
+      return base;
+    }
+    if(prod==='FUNGIBLE_SMALL'){return R.FUNGIBLE_SMALL.COMPULSORY[fam][w];}
+    if(prod==='SMALL_TICKET'){const t=w<=5000?'basic':w<=10000?'bronze':w<=15000?'silver':'gold';return R.SMALL_TICKET.COMPULSORY[fam][t];}
+  }catch(e){return null;}
+  return null;
+}
+
+// ═══════════════════════════════════════
+//  STATE + INIT
+// ═══════════════════════════════════════
+let selProd=null, qCtr=1000+Math.floor(Math.random()*500);
+window.onload=()=>{ document.getElementById('f-date').value=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}); };
+
+// ═══════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════
+function pickProd(type,el){
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); selProd=type;
+  document.getElementById('e-product').style.display='none';
+
+  const ws=document.getElementById('f-wallet');
+  const coverageRow=document.getElementById('coverage-row');
+  const wellnessRow=document.getElementById('wellness-row');
+  const compOnly=['FUNGIBLE_SMALL','SMALL_TICKET'];
+
+  // Restore all wallet options first
+  Array.from(ws.options).forEach(o=>o.style.display='');
+
+  if(type==='FUNGIBLE_SMALL'){
+    // Only 5K and 10K for Fungible Small
+    Array.from(ws.options).forEach(o=>{if(o.value&&o.value!='5000'&&o.value!='10000')o.style.display='none';});
+    if(!['','5000','10000'].includes(ws.value))ws.value='';
+    document.getElementById('wallet-field-lbl').innerHTML='OPD Wallet SI <span class="req">*</span>';
+    const stdLabels={5000:'₹5,000 — Basic',10000:'₹10,000 — Bronze'};
+    Array.from(ws.options).forEach(o=>{if(stdLabels[o.value])o.text=stdLabels[o.value];});
+  } else if(type==='SMALL_TICKET'){
+    // Small Ticket: show plan names only — no ₹ amounts in dropdown
+    const stLabels={5000:'Basic',10000:'Bronze',15000:'Silver',20000:'Gold'};
+    Array.from(ws.options).forEach(o=>{
+      if(o.value==='25000'||o.value==='30000'){o.style.display='none';}
+      if(stLabels[o.value])o.text=stLabels[o.value];
+    });
+    if(!['','5000','10000','15000','20000'].includes(ws.value))ws.value='';
+    document.getElementById('wallet-field-lbl').innerHTML='Plan Variant <span class="req">*</span>';
+  } else {
+    // Restore standard labels for other products
+    const stdLabels={5000:'₹5,000 — Basic',10000:'₹10,000 — Bronze',15000:'₹15,000 — Silver',20000:'₹20,000 — Gold',25000:'₹25,000 — Platinum',30000:'₹30,000 — Platinum Plus'};
+    Array.from(ws.options).forEach(o=>{if(stdLabels[o.value])o.text=stdLabels[o.value];});
+    document.getElementById('wallet-field-lbl').innerHTML='OPD Wallet SI <span class="req">*</span>';
+  }
+
+  // Hide coverage dropdown for compulsory-only products; auto-set to Compulsory
+  if(compOnly.includes(type)){
+    coverageRow.style.display='none';
+    document.getElementById('f-coverage').value='COMPULSORY';
+    document.getElementById('part-row').classList.remove('show');
+    document.getElementById('f-part').value='';
+  } else {
+    coverageRow.style.display='';
+    // Reset coverage if it was overridden
+  }
+
+  // Hide wellness toggle for compulsory-only products
+  wellnessRow.style.display=compOnly.includes(type)?'none':'';
+
+  // Show/hide compulsory-only alert live
+  const cov=document.getElementById('f-coverage').value;
+  const ao=document.getElementById('a-componly');
+  if(compOnly.includes(type)&&cov==='VOLUNTARY'){ao.classList.add('show');}
+  else{ao.classList.remove('show');}
+
+  onCommChange();
+}
+
+function togglePart(){
+  const ct=document.getElementById('f-coverage').value;
+  document.getElementById('part-row').classList.toggle('show',ct==='VOLUNTARY');
+  if(ct!=='VOLUNTARY')document.getElementById('f-part').value='';
+  // Compulsory-only check
+  const compOnly=['FUNGIBLE_SMALL','SMALL_TICKET'];
+  const ao=document.getElementById('a-componly');
+  if(selProd&&compOnly.includes(selProd)&&ct==='VOLUNTARY'){ao.classList.add('show');}
+  else{ao.classList.remove('show');}
+}
+
+function hideAlerts(){document.querySelectorAll('.alert').forEach(a=>a.classList.remove('show'));}
+
+// ═══════════════════════════════════════
+//  VALIDATE
+// ═══════════════════════════════════════
+function validate(){
+  let ok=true; hideAlerts();
+  ['f-client','f-emp','f-family','f-coverage','f-wallet'].forEach(id=>document.getElementById(id).classList.remove('err'));
+  document.querySelectorAll('.ferr').forEach(e=>e.classList.remove('show'));
+  const set=(fid,eid)=>{document.getElementById(fid).classList.add('err');document.getElementById(eid).classList.add('show');ok=false;};
+  if(!document.getElementById('f-client').value.trim())set('f-client','e-client');
+  const emp=parseInt(document.getElementById('f-emp').value);
+  if(!emp||emp<1){set('f-emp','e-emp');}else if(emp<50||emp>2000){document.getElementById('a-uw').classList.add('show');ok=false;}
+  if(!document.getElementById('f-family').value)set('f-family','e-family');
+  const compOnlyProds=['FUNGIBLE_SMALL','SMALL_TICKET'];
+  if(!compOnlyProds.includes(selProd)&&!document.getElementById('f-coverage').value)set('f-coverage','e-coverage');
+  if(!document.getElementById('f-wallet').value)set('f-wallet','e-wallet');
+  if(document.getElementById('f-coverage').value==='VOLUNTARY'&&!document.getElementById('f-part').value){document.getElementById('f-part').classList.add('err');document.getElementById('e-part').classList.add('show');ok=false;}
+  if(!selProd){document.getElementById('e-product').style.display='block';ok=false;}
+  if(selProd==='OPEN'&&emp&&emp<100){document.getElementById('a-open').classList.add('show');ok=false;}
+  // Item 12: Compulsory-only products cannot use Voluntary
+  if(compOnlyProds.includes(selProd)&&document.getElementById('f-coverage').value==='VOLUNTARY'){
+    document.getElementById('a-componly').classList.add('show');
+    ok=false;
+  }
+  return ok;
+}
+
+// ═══════════════════════════════════════
+//  GENERATE
+// ═══════════════════════════════════════
+function generateQuote(){
+  if(!validate())return;
+  const client=document.getElementById('f-client').value.trim();
+  const emp=parseInt(document.getElementById('f-emp').value);
+  const fam=document.getElementById('f-family').value;
+  const cov=document.getElementById('f-coverage').value;
+  const part=document.getElementById('f-part').value;
+  const wal=document.getElementById('f-wallet').value;
+  const w=parseInt(wal);
+  const dateStr=document.getElementById('f-date').value;
+
+  const baseRate=resolveRate(selProd,cov,fam,wal,part,emp);
+  if(baseRate==null){document.getElementById('a-miss').classList.add('show');return;}
+
+  // Validate commercials
+  if(!validateCommercials()){window.scrollTo({top:document.querySelector('.comm-panel').offsetTop-20,behavior:'smooth'});return;}
+
+  // Commercial Adjustment Engine
+  const {brok,ins,opex}=getCommercials();
+  const riskCost=extractRiskCost(baseRate);
+  const adjRate=applyCommercials(riskCost,brok,ins,opex);
+  if(!adjRate||adjRate<=0){document.getElementById('a-miss').classList.add('show');return;}
+
+  const adjRateWellness=applyWellnessDiscount(adjRate);
+  const perEmp=Math.round(adjRateWellness);
+  const netTotal=Math.round(perEmp*emp);
+  const gst=Math.round(netTotal*.18);
+  const gross=netTotal+gst;
+
+  qCtr++;
+  const qid=`BFHL-WCP-${new Date().getFullYear()}-${String(qCtr).padStart(4,'0')}`;
+  const plan=WPLAN[w]||'Custom';
+  const structs={ADDITIVE:'Additive',FUNGIBLE:'Fungible',OPEN:'Open Wallet',FUNGIBLE_SMALL:'Fungible (5K/10K)',SMALL_TICKET:'Small Ticket — Digital OPD'};
+  const famFull={E:'Employee Only',ESC:'Employee, Spouse & Children',ESCP:'Employee, Spouse, Children & Parents'};
+  const partSel=document.getElementById('f-part');
+  const partLbl=partSel.selectedIndex>0?partSel.options[partSel.selectedIndex].text:'';
+
+  // Fill doc
+  document.getElementById('qd-plan-hdr').textContent=plan+' Plan';
+  document.getElementById('qd-id').textContent=qid;
+  document.getElementById('qd-date').textContent=dateStr;
+  document.getElementById('qd-expiry').textContent=expiryDate();
+  document.getElementById('qd-name').textContent=client;
+  document.getElementById('qd-family').textContent=famFull[fam];
+  document.getElementById('qd-emp').textContent=emp.toLocaleString('en-IN');
+  document.getElementById('qd-cov').textContent=cov==='COMPULSORY'?'Compulsory (100%)':`Voluntary — ${partLbl}`;
+  document.getElementById('qd-struct').textContent=structs[selProd];
+
+  // Fix 5: Small Ticket shows Plan name only, not wallet SI
+  const isSmallTicket = (selProd === 'SMALL_TICKET');
+  const walletLblEl = document.getElementById('qd-wallet-lbl');
+  const walletRowEl = document.getElementById('qd-wallet-row');
+  const wellnessRowEl = document.getElementById('qd-wellness-row');
+  if(isSmallTicket){
+    walletRowEl.style.display = 'none';
+    wellnessRowEl.style.display = 'none';
+  } else {
+    walletRowEl.style.display = '';
+    wellnessRowEl.style.display = '';
+    walletLblEl.textContent = 'OPD Wallet SI';
+    document.getElementById('qd-wallet').textContent=`₹${w.toLocaleString('en-IN')}`;
+  }
+
+  document.getElementById('qd-wellness').textContent=wellnessMode==='with'?`₹${w.toLocaleString('en-IN')} (Over & Above OPD Wallet)`:'Not Included';
+  document.getElementById('qd-plan').innerHTML=`<span class="pbadge ${PBADGE[plan]||'pb-silver'}">${plan}</span>`;
+
+  // Fix 4: Combined OPD + Wellness value banner
+  const combinedRow = document.getElementById('qd-combined-row');
+  if(wellnessMode==='with' && !isSmallTicket){
+    const combined = w * 2;
+    document.getElementById('qd-combined').textContent = `₹${w.toLocaleString('en-IN')} OPD + ₹${w.toLocaleString('en-IN')} Wellness = ₹${combined.toLocaleString('en-IN')}`;
+    combinedRow.style.display = 'flex';
+  } else {
+    combinedRow.style.display = 'none';
+  }
+
+  document.getElementById('qd-rate').textContent=fmt(perEmp);
+  document.getElementById('qd-net').textContent=fmt(netTotal);
+  document.getElementById('qd-gst').textContent=fmt(gst);
+  document.getElementById('qd-gross').textContent=fmt(gross);
+
+  // Benefits table — filter wellness if "without wellness" mode selected
+  let rows = construct(selProd, wal);
+  if (wellnessMode === 'without') {
+    // Remove the Wellness Wallet section header and all its rows
+    let skipWellness = false;
+    rows = rows.filter(r => {
+      if (r.s && r.b && r.b.includes('Wellness Wallet')) {
+        skipWellness = true;   // start skipping at this section header
+        return false;
+      }
+      if (skipWellness && !r.s) return false;   // skip non-section rows in wellness
+      if (r.s && !r.b.includes('Wellness')) skipWellness = false; // new non-wellness section → stop skipping
+      return true;
+    });
+  }
+  // Change 2: Hide gym row when not covered (value is —)
+  rows = rows.filter(r => !(r.b && r.b.includes('Gym Session') && r.l === '—'));
+  document.getElementById('qd-tbody').innerHTML = rows.map(r =>
+    r.s ? `<tr class="tsec"><td colspan="2">▸ ${r.b}</td><td style="font-weight:800;font-size:.78rem;color:var(--navy);letter-spacing:0">${r.l?'<strong>'+r.l+'</strong>':''}</td></tr>` :
+          `<tr><td>${r.b}</td><td>${modeHtml(r.m)}</td><td>${r.l}</td></tr>`
+  ).join('');
+
+  // Render relevant PHC package (Change 2)
+  renderPHC(getPHCPackage(selProd, wal), selProd);
+
+  document.getElementById('input-section').style.display='none';
+  document.getElementById('quote-output').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+//  PDF DOWNLOAD
+// ═══════════════════════════════════════
+function downloadPDF(){
+  const btn=document.getElementById('btn-dl');
+  btn.disabled=true; btn.textContent='⏳ Generating PDF...';
+  const name=document.getElementById('qd-name').textContent.replace(/[^a-z0-9]/gi,'_');
+  const qid=document.getElementById('qd-id').textContent;
+  html2pdf().set({
+    margin:[8,8,8,8],
+    filename:`${name}_${qid}.pdf`,
+    image:{type:'jpeg',quality:.97},
+    html2canvas:{scale:2,useCORS:true,logging:false},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['avoid-all','css']}
+  }).from(document.getElementById('quote-doc')).save().then(()=>{
+    btn.disabled=false; btn.innerHTML='⬇ Download PDF Quote';
+  });
+}
+
+// ═══════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════
+function resetForm(){
+  ['f-client','f-emp'].forEach(id=>document.getElementById(id).value='');
+  // Reset wellness toggle
+  wellnessMode='with';
+  document.getElementById('wt-with').classList.add('wsel');
+  document.getElementById('wt-without').classList.remove('wsel');
+  document.getElementById('well-disc-note').classList.remove('show');
+  // Hide family rate panel
+  document.getElementById('fam-rate-panel').classList.remove('show');
+  renderPHC(null); // clear PHC table on reset
+  document.getElementById('a-componly').classList.remove('show');
+  ['f-family','f-coverage','f-part','f-wallet'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ferr').forEach(e=>{e.classList.remove('show');e.style.display='';});
+  document.querySelectorAll('.err').forEach(e=>e.classList.remove('err'));
+  // Reset commercial fields to defaults
+  document.getElementById('c-brok').value  = '7.5';
+  document.getElementById('c-ins').value   = '2.5';
+  document.getElementById('c-opex').value  = '15';
+  document.getElementById('c-brok').classList.remove('cerr');
+  document.getElementById('c-ins').classList.remove('cerr');
+  document.getElementById('c-opex').classList.remove('cerr');
+  document.getElementById('w-loading').classList.remove('show');
+  document.getElementById('rate-preview').style.display='none';
+  hideAlerts(); document.getElementById('part-row').classList.remove('show');
+  Array.from(document.getElementById('f-wallet').options).forEach(o=>o.style.display='');
+  selProd=null;
+}
+function newQuote(){
+  document.getElementById('quote-output').classList.remove('show');
+  document.getElementById('input-section').style.display='block';
+  resetForm(); window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
