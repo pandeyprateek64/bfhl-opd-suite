@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bajaj Health — WCP 2.0 Pricing Portal</title>
+<script>
+// ── Auth Guard ──
+const TOKEN = localStorage.getItem('bfhl_token');
+if (!TOKEN) window.location.href = '/login.html';
+async function postQuoteToBackend(data) {
+  try {
+    await fetch('/api/saveQuote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+      body: JSON.stringify(data)
+    });
+  } catch(e) { console.warn('Quote save failed:', e); }
+}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
@@ -295,7 +309,7 @@ input.err,select.err{border-color:var(--error)!important}
     </div>
     <div class="phdr-ttl">WCP 2.0 — OPD Pricing Portal<small>Wellness Care Plan | OPD Quotation Tool</small></div>
   </div>
-  
+  <a href="/dashboard.html" style="color:rgba(255,255,255,.85);font-size:.78rem;font-family:'DM Sans',sans-serif;text-decoration:none;background:rgba(255,255,255,.12);padding:6px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.2);">← Dashboard</a>
 </div>
 
 <div class="wrap">
@@ -1530,6 +1544,28 @@ function generateQuote(){
   document.getElementById('input-section').style.display='none';
   document.getElementById('quote-output').classList.add('show');
   window.scrollTo({top:0,behavior:'smooth'});
+
+  // ── Save quote to backend ──
+  postQuoteToBackend({
+    quote_ref: qid,
+    tool_source: 'WCP_PORTAL',
+    client_name: client,
+    employee_count: emp,
+    family_construct: fam,
+    coverage_type: cov,
+    product_type: selProd,
+    wallet_si: w,
+    wellness_mode: wellnessMode,
+    rate_per_employee: perEmp,
+    net_premium: netTotal,
+    gst: gst,
+    gross_premium: gross,
+    brokerage: parseFloat(document.getElementById('c-brok').value) / 100,
+    insurance_margin: parseFloat(document.getElementById('c-ins').value) / 100,
+    opex_loading: parseFloat(document.getElementById('c-opex').value) / 100,
+    quote_date: dateStr,
+    status: 'DRAFT'
+  });
 }
 
 // ═══════════════════════════════════════
